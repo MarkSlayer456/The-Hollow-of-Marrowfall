@@ -4,6 +4,8 @@
 #include "types.h"
 #include <stdbool.h>
 
+float enemy_get_spawn_chance(const char spawn_char);
+
 void calculate_main_path(unsigned int *seed, world_t *world);
 
 void calculate_door_masks(world_t *world);
@@ -25,5 +27,5 @@ room_t *get_current_room(world_t *world, player_t *player);
 
 tile_t *get_tile(room_t *room, int y, int x);
 
-bool tile_is_walkable(tile_t *tile);
+bool tile_is_walkable(room_t *room, tile_t *tile, int y, int x);
 #endif

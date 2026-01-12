@@ -6,6 +6,11 @@
 #include <stdint.h>
 
 typedef struct {
+	const char name;
+	float value;
+} float_map_t;
+
+typedef struct {
 	int8_t x;
 	int8_t y;
 	bool broken;

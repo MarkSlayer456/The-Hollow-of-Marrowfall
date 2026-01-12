@@ -15,7 +15,7 @@ Terracite Armor,STRENGTH,8
 Terracite Armor,SPEED,-6
 Gravemarrow Armor,STRENGTH,10
 Gravemarrow Armor,SPEED,-8
-Voidmarrow Armor,STRENGTH,25
+Voidmarrow Armor,STRENGTH,12
 Voidmarrow Armor,SPEED,-8
 Rat Hide Armor,DEXTERITY,3
 Slime Armor,DEXTERITY,4
@@ -24,7 +24,7 @@ Bone Armor,DEXTERITY,6
 Sunsteel Armor,DEXTERITY,7
 False Iron Armor,DEXTERITY,8
 Barkmail Armor,DEXTERITY,10
-Dragon Bone Armor,DEXTERITY,5
+Dragon Bone Armor,DEXTERITY,12
 Cloak,INTELLIGENCE,3
 Leather Cloak,INTELLIGENCE,5
 Bogstick Vest,INTELLIGENCE,1

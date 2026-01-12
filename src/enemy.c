@@ -101,7 +101,7 @@ static void enemy_handle_knockback(enemy_t *enemy, player_t *player, world_t *wo
     int can_knockback = 0;
     for(int i = 1; i < knockback+1; i++) {
         tile_t *tile = get_tile(room, player->y+(diffY*i), player->x+(diffX*i));
-        if(!tile_is_walkable(tile) || tile->floor == DOOR) {
+        if(!tile_is_walkable(room, tile, player->y+(diffY*i), player->x+(diffX*i)) || tile->floor == DOOR) {
             break;
         }
         can_knockback++;

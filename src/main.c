@@ -155,9 +155,6 @@ int main(int argc, char *argv[]) {
 	}
 	
 	room_t *first = setup_first_room(&world->seed, 0, 0, world->enemy_data, world->item_data, world);
-	enemy_spawn(first->enemies[0], BAT, world->enemy_data, 1, 1, 0, 0, first->biome);
-
-	first->current_enemy_count++;
 
 	world->room[0][0] = first;
 

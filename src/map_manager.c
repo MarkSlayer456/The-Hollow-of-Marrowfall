@@ -14,8 +14,28 @@
 #include "items/items.h"
 #include "functions.h"
 #include "pot.h"
+#include <string.h>
 
 extern char walk_chars[WALK_CHAR_LENGTH];
+
+float_map_t  enemy_spawn_chance_map[] = {
+	{POTENTIAL_ENEMY_SPAWN_CHAR1, POTENTIAL_ENEMY_SPAWN_CHANCE1},
+	{POTENTIAL_ENEMY_SPAWN_CHAR2, POTENTIAL_ENEMY_SPAWN_CHANCE2},
+	{POTENTIAL_ENEMY_SPAWN_CHAR3, POTENTIAL_ENEMY_SPAWN_CHANCE3},
+	{POTENTIAL_ENEMY_SPAWN_CHAR4, POTENTIAL_ENEMY_SPAWN_CHANCE4},
+	{POTENTIAL_ENEMY_SPAWN_CHAR5, POTENTIAL_ENEMY_SPAWN_CHANCE5},
+};
+
+const int enemy_spawn_chance_map_len = sizeof(enemy_spawn_chance_map) / sizeof(enemy_spawn_chance_map[0]);
+
+float enemy_get_spawn_chance(const char spawn_char) {
+	for(int i = 0; i < enemy_spawn_chance_map_len; i++) {
+		if(spawn_char == enemy_spawn_chance_map[i].name) {
+			return enemy_spawn_chance_map[i].value;
+		}
+	}
+	return 0;
+}
 
 void calculate_main_path(unsigned int *seed, world_t *world) {
 	int main_x = 1, main_y = 0; // current main path x and y cords
@@ -298,11 +318,19 @@ room_t *load_room(unsigned int *seed, int x, int y, enemy_data_t *enemy_data, it
 		DEBUG_LOG("tok = %s | i = %d", tok, i);
 		for(int j = 0; j < strlen(tok); j++) {
 			switch(tok[j]) {
-				case POTENTIAL_ENEMY_SPAWN_CHAR:
-					enemy_spawn(room->enemies[room->current_enemy_count], enemy_generate_type(&map_seed, enemy_data, room->biome), enemy_data, j, i, x, y, room->biome);
+				case POTENTIAL_ENEMY_SPAWN_CHAR1:
+				case POTENTIAL_ENEMY_SPAWN_CHAR2:
+				case POTENTIAL_ENEMY_SPAWN_CHAR3:
+				case POTENTIAL_ENEMY_SPAWN_CHAR4:
+				case POTENTIAL_ENEMY_SPAWN_CHAR5: {
 					room->tiles[i][j]->floor = EMPTY;
-					room->current_enemy_count++;
+					float chance = (float) rand() / (float) RAND_MAX;
+					if(enemy_get_spawn_chance(tok[j]) >= chance) {
+						enemy_spawn(room->enemies[room->current_enemy_count], enemy_generate_type(&map_seed, enemy_data, room->biome), enemy_data, j, i, x, y, room->biome);
+						room->current_enemy_count++; // TODO should be inside enemy_spawn function
+					}
 					break;
+				}
 				case POTENTIAL_CHEST_SPAWN_CHAR:
 					room->tiles[i][j]->floor = tok[j];
 					break;
@@ -349,7 +377,11 @@ void load_room_floor_tiles(room_t *room) {
 		DEBUG_LOG("tok = %s | i = %d", tok, i);
 		for(int j = 0; j < strlen(tok); j++) {
 			switch(tok[j]) {
-				case POTENTIAL_ENEMY_SPAWN_CHAR:
+				case POTENTIAL_ENEMY_SPAWN_CHAR1:
+				case POTENTIAL_ENEMY_SPAWN_CHAR2:
+				case POTENTIAL_ENEMY_SPAWN_CHAR3:
+				case POTENTIAL_ENEMY_SPAWN_CHAR4:
+				case POTENTIAL_ENEMY_SPAWN_CHAR5:
 				case POTENTIAL_CHEST_SPAWN_CHAR:
 				case POTENTIAL_ITEM_SPAWN_CHAR:
 					room->tiles[i][j]->floor = EMPTY;
@@ -465,9 +497,25 @@ tile_t *get_tile(room_t *room, int y, int x) {
 	return room->tiles[y][x];
 }
 
-bool tile_is_walkable(tile_t *tile) {
+bool tile_is_walkable(room_t *room, tile_t *tile, int y, int x) {
 	for(int i = 0; i < WALK_CHAR_LENGTH; i++) {
 		if(tile->floor == walk_chars[i]) {
+			for(int p = 0; p < room->current_pot_count; p++) {
+				pot_t pot = room->pots[p];
+				if(pot.x == x && pot.y == y) {
+					if(!pot.broken) {
+						return false;
+					} else {
+						return true;
+					}
+				}
+			}
+			for(int e = 0; e < room->current_enemy_count; e++) {
+				enemy_t *enemy = room->enemies[e];
+				if(enemy->x == x && enemy->y == y) {
+					return false;
+				}
+			}
 			return true;
 		}
 	}
