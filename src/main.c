@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <signal.h>
@@ -25,6 +28,8 @@
 #include "traps.h"
 #include "buff.h"
 #include "pot.h"
+#include "renderer.h"
+#include "menu.h"
 
 /*
 	Top down dungeon crawler
@@ -33,7 +38,10 @@
 	oil is your friend without it you won't last long
 */
 
-WINDOW *main_menu;
+static SDL_Window *window = NULL;
+static SDL_Renderer *renderer = NULL;
+
+WINDOW *main_menu_win;
 WINDOW *hud; // gives player useful information
 WINDOW *action_bar; // OLG player's inventory/spells menu, maybe a help menu in the future
 WINDOW *error; // USED FOR ERROR CHECKING ONLY
@@ -47,6 +55,7 @@ int main(int argc, char *argv[]) {
 	
     initscr();
     curs_set(0);
+
 	win = newwin(20, 20, 0, 0);
 	box(win,0,0);
     hud = newwin(HUD_HEIGHT, HUD_WIDTH, 0, 21);
@@ -54,7 +63,7 @@ int main(int argc, char *argv[]) {
 	inventory_hud = newwin(INVENTORY_HEIGHT, INVENTORY_WIDTH, 0, 0);
 	inventory_desc_hud = newwin(INVENTORY_HEIGHT, INVENTORY_WIDTH, INVENTORY_HEIGHT, 0);
     error = newwin(25, 25, 51, 30);
-	main_menu = newwin(SCREEN_HEIGHT, SCREEN_WIDTH, 0, 0);
+	main_menu_win = newwin(SCREEN_HEIGHT, SCREEN_WIDTH, 0, 0);
     
 	load_menu_t load_menu;
 	load_menu.win = newwin(SCREEN_HEIGHT, SCREEN_WIDTH, 0, 0);
@@ -69,7 +78,7 @@ int main(int argc, char *argv[]) {
     refresh();
     wrefresh(hud);
     wrefresh(error);
-    
+
 	noecho();
 	nodelay(stdscr, FALSE);
 	keypad(stdscr, FALSE);
@@ -164,23 +173,39 @@ int main(int argc, char *argv[]) {
 	calculate_door_masks(world);
 	calculate_main_path(&world->seed, world);
 	
+	SDL_Context ctx = SDL_setup(window, renderer);
+	load_textures(&ctx);
 	world->win = win;
     world->turn_order_size = 0;
-	
-	for(;;) {
+
+	SDL_RenderClear(ctx.renderer);
+	SDL_RenderPresent(ctx.renderer);
+	menu_t menus[MENU_COUNT] = {
+		[MAIN_MENU] = {0},
+		[CLASS_MENU] = {0},
+		[LOAD_MENU] = {0},
+	};
+	// menu_t main_menu = {0};
+	main_menu_init(&menus[MAIN_MENU], &ctx);
+	int running = 1;
+	SDL_Event event;
+	while(running) {
+
+
+		SDL_SetRenderDrawColor(ctx.renderer, 0, 0, 0, 255); // black background
+		SDL_RenderClear(ctx.renderer);
+
+
 		switch(player->menu_manager.current_menu) {
 			case GAME:
 				if(world->room[0][0]->is_created == false) {
 					//TODO reset world function
 					world->room[0][0] = load_room(&world->seed, 0, 0, world->enemy_data, world->item_data, world);
-					enemy_spawn(world->room[0][0]->enemies[0], BAT, world->enemy_data, 1, 1, 0, 0, world->room[0][0]->biome);
-					world->room[0][0]->current_enemy_count++;
 					calculate_door_masks(world);
 					calculate_main_path(&world->seed, world);
 					world->turn_order_size = 0;
 					drop_item(world->room[0][0]->tiles[10][1], world->item_data, FIREBALL_SPELL_BOOK, 1);
 				}
-				calculate_light(world, player);
 				generate_turn_order_display(world, player);
 				for(int i = 0; i < world->room[player->global_x][player->global_y]->current_enemy_count; i++) {
 					enemy_t *enemy = world->room[player->global_x][player->global_y]->enemies[i];
@@ -217,9 +242,13 @@ int main(int argc, char *argv[]) {
 					}
 				}
 				traps_triggered_check_enemies(world, world->room[player->global_x][player->global_y]);
+				calculate_light(world, player);
+				render_game(&ctx, world, player);
 				break;
 			case MAIN_MENU: { // this bracket must be here and it infuriates me
-				draw_main_menu(main_menu, &player->menu_manager);
+				menu_render(&menus[MAIN_MENU], ctx.renderer);
+				SDL_RenderPresent(ctx.renderer);
+				draw_main_menu(main_menu_win, &player->menu_manager);
 				char c = getch();
 				manage_menu_input(c, &player->menu_manager, world, player);
 				break;
@@ -232,21 +261,38 @@ int main(int argc, char *argv[]) {
 			}
 			case SAVE_MENU: {
 				char buf[SAVE_FILE_MAX_LEN];
-				display_and_manage_save_menu(main_menu, buf, SAVE_FILE_MAX_LEN, world, player, &player->menu_manager);
+				display_and_manage_save_menu(main_menu_win, buf, SAVE_FILE_MAX_LEN, world, player, &player->menu_manager);
 				break;
 			}
 			case LOG_BOOK_MENU:
 				break;
 			case CLASS_MENU:
-				display_and_manage_class_menu(main_menu, world, player, &player->menu_manager);
+				display_and_manage_class_menu(main_menu_win, world, player, &player->menu_manager);
 				break;
 			case NULL_MENU:
 				player->menu_manager.current_menu = MAIN_MENU;
 				DEBUG_LOG("%s", "WARNING: NULL_MENU WAS SET, RESETTING TO MAIN_MENU");
 				break;
+			case MENU_COUNT:
+				break;
+		}
+		SDL_RenderPresent(ctx.renderer);
+		SDL_Delay(16); // ~60 FPS
+		while(SDL_PollEvent(&event)) {
+			menu_handle_input(menus, player->menu_manager.current_menu, event);
+			menu_update_cursor_pos(&menus[player->menu_manager.current_menu]);
+			switch(event.type) {
+				case SDL_QUIT:
+					end_game(world, player);
+					running = 0;
+					break;
+			}
 		}
     }
     endwin();
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
     exit(0);
     return 0;
 }

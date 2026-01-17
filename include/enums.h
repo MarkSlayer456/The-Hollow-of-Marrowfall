@@ -40,7 +40,8 @@ enum menu {
 	SAVE_MENU,
 	LOG_BOOK_MENU,
 	CLASS_MENU,
-	GAME
+	GAME,
+	MENU_COUNT
 };
 
 typedef enum biome {

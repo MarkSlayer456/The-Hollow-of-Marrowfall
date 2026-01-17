@@ -7,6 +7,7 @@
 #include "items/item_types.h"
 #include "character_types.h"
 #include "map_types.h"
+#include <SDL2/SDL.h>
 
 #define DEBUG_LOG(fmt, ...) \
 do { \
@@ -16,6 +17,41 @@ do { \
 		fclose(f); \
 	} \
 } while (0)
+
+enum sprite_enum {
+	SPRITE_BLANK,
+	SPRITE_EXCLAMATION,
+	SPRITE_PLAYER,
+	SPRITE_DOT,
+	SPRITE_POT,
+	SPRITE_WALL,
+	SPRITE_DOOR,
+	SPRITE_FLOOR_ITEM,
+	SPRITE_MUD,
+	SPRITE_HOLE,
+	SPRITE_STALAGMITE,
+	SPRITE_TWISTED_ROOT,
+	SPRITE_BAT,
+	SPRITE_RAT,
+	SPRITE_SKELETON,
+	SPRITE_SLIME,
+	SPRITE_MUD_CRAWLER,
+	SPRITE_BOG_LURKER,
+	SPRITE_MOSS_BEAST,
+	SPRITE_DRAGON,
+	SPRITE_BABY_DRAGON,
+	SPRITE_GOBLIN,
+	SPRITE_GHOST,
+	SPRITE_LOOT_GOBLIN,
+	SPRITE_JESTER,
+	SPRITE_VOIDLING,
+	SPRITE_MARROW_CRAWLER,
+	SPRITE_VOID_MAW,
+	SPRITE_MARROW_LEECH,
+
+	// this is the last item at all times do not append after it
+	SPRITE_COUNT
+};
 
 /*
  * holds all world information, aside from the player
@@ -53,5 +89,35 @@ typedef struct {
 	uint8_t cursor_pos;
 } load_menu_t;
 
+typedef struct {
+	SDL_Texture *texture;
+	SDL_Rect rect;
+} SDL_Data;
+
+typedef struct {
+	SDL_Rect dst;
+	SDL_Rect src;
+} sprite_t;
+
+typedef struct {
+	SDL_Data sdl_data;
+	char *str;
+	int font_size;
+} menu_data_item_t;
+
+typedef struct {
+	SDL_Window *window;
+	SDL_Renderer *renderer;
+	SDL_Texture *texture;
+} SDL_Context;
+
+typedef struct {
+	menu_data_item_t *data;
+	enum menu *dests;
+	int16_t menu_item_size;
+	int selected;
+	int selectable_size; // the number of items that are selectable
+	int select_start_offset; // the offset in the array where selection starts, this avoids titles and such
+} menu_t;
 
 #endif

@@ -469,4 +469,7 @@
 // menus
 #define MENU_CLASS_PROMPT								"Please select a class!"
 
+#define WINDOW_WIDTH									1280
+#define WINDOW_HEIGHT									720
+
 #endif
