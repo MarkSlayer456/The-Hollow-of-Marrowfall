@@ -18,4 +18,7 @@ enum sprite_enum get_sprite_from_char(char c);
 
 void render_game(SDL_Context *ctx, world_t *world,  player_t *player);
 
+
+void render_game_hud(SDL_Context *ctx, world_t *world, player_t *player);
+
 #endif

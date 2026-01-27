@@ -43,6 +43,24 @@ void ensure_save_folder() {
 	#endif
 }
 
+//TODO add a data const, so this can be tracked later
+int fwrite_checked(void *prt, size_t size, int count, FILE *file) {
+	if(fwrite(prt, size, count, file) != count) {
+		DEBUG_LOG("%s", "writing failed");
+		return -1;
+	}
+	return 0;
+}
+
+//TODO add a data const, so this can be tracked later
+int fread_checked(void *prt, size_t size, int count, FILE *file) {
+	if(fread(prt, size, count, file) != count) {
+		DEBUG_LOG("%s", "reading failed");
+		return -1;
+	}
+	return 0;
+}
+
 void save_game(world_t *world, player_t *player, char *name) {
 	char path[512];
 	snprintf(path, sizeof(path), "%s%s", get_save_path(), name);
@@ -74,59 +92,59 @@ void save_player(player_t *player, FILE *file) {
 	if(!player) {
 		DEBUG_LOG("%s", "player null");
 	}
-	fwrite(&player->level, sizeof(int), 1, file);
-	fwrite(&player->xp, sizeof(int), 1, file);
-	fwrite(&player->health, sizeof(int), 1, file);
-	fwrite(&player->max_health, sizeof(int), 1, file);
-	fwrite(&player->strength, sizeof(float), 1, file);
-	fwrite(&player->dexterity, sizeof(float), 1, file);
-	fwrite(&player->intelligence, sizeof(float), 1, file);
-	fwrite(&player->constitution, sizeof(float), 1, file);
-	fwrite(&player->speed, sizeof(float), 1, file);
-	fwrite(&player->x, sizeof(int), 1, file);
-	fwrite(&player->y, sizeof(int), 1, file);
-	fwrite(&player->global_x, sizeof(int), 1, file);
-	fwrite(&player->global_y, sizeof(int), 1, file);
+	fwrite_checked(&player->level, sizeof(int), 1, file);
+	fwrite_checked(&player->xp, sizeof(int), 1, file);
+	fwrite_checked(&player->health, sizeof(int), 1, file);
+	fwrite_checked(&player->max_health, sizeof(int), 1, file);
+	fwrite_checked(&player->strength, sizeof(float), 1, file);
+	fwrite_checked(&player->dexterity, sizeof(float), 1, file);
+	fwrite_checked(&player->intelligence, sizeof(float), 1, file);
+	fwrite_checked(&player->constitution, sizeof(float), 1, file);
+	fwrite_checked(&player->speed, sizeof(float), 1, file);
+	fwrite_checked(&player->x, sizeof(int), 1, file);
+	fwrite_checked(&player->y, sizeof(int), 1, file);
+	fwrite_checked(&player->global_x, sizeof(int), 1, file);
+	fwrite_checked(&player->global_y, sizeof(int), 1, file);
 	
-	fwrite(&player->equipment.spell1, sizeof(int), 1, file);
-	fwrite(&player->equipment.spell2, sizeof(int), 1, file);
-	fwrite(&player->equipment.spell3, sizeof(int), 1, file);
+	fwrite_checked(&player->equipment.spell1, sizeof(int), 1, file);
+	fwrite_checked(&player->equipment.spell2, sizeof(int), 1, file);
+	fwrite_checked(&player->equipment.spell3, sizeof(int), 1, file);
 
-	fwrite(&player->inventory_count, sizeof(int), 1, file);
+	fwrite_checked(&player->inventory_count, sizeof(int), 1, file);
 	for(int i = 0; i < player->inventory_count; i++) {
 		if(player->inventory[i].stack == 0) continue;
-		fwrite(&player->inventory[i].id, sizeof(item_ids_t), 1, file);
-		fwrite(&player->inventory[i].stack, sizeof(int), 1, file);
+		fwrite_checked(&player->inventory[i].id, sizeof(item_ids_t), 1, file);
+		fwrite_checked(&player->inventory[i].stack, sizeof(int), 1, file);
 		if(player->inventory[i].value_type == VALUE_TYPE_WEAPON) {
-			fwrite(&player->inventory[i].stat_type.weapon.equipped, sizeof(bool), 1, file);
+			fwrite_checked(&player->inventory[i].stat_type.weapon.equipped, sizeof(bool), 1, file);
 		} else if(player->inventory[i].value_type == VALUE_TYPE_ARMOR) {
-			fwrite(&player->inventory[i].stat_type.armor.equipped, sizeof(bool), 1, file);
+			fwrite_checked(&player->inventory[i].stat_type.armor.equipped, sizeof(bool), 1, file);
 		}
 	}
-	fwrite(&player->nearby_loot_count, sizeof(int), 1, file);
+	fwrite_checked(&player->nearby_loot_count, sizeof(int), 1, file);
 	for(int i = 0; i < player->nearby_loot_count; i++) {
-		fwrite(&player->nearby_loot[i]->id, sizeof(item_ids_t), 1, file);
-		fwrite(&player->nearby_loot[i]->stack, sizeof(int), 1, file);
+		fwrite_checked(&player->nearby_loot[i]->id, sizeof(item_ids_t), 1, file);
+		fwrite_checked(&player->nearby_loot[i]->stack, sizeof(int), 1, file);
 	}
 	
-	fwrite(&player->mana, sizeof(int), 1, file);
-	fwrite(&player->max_mana, sizeof(int), 1, file);
-	fwrite(&player->action_points, sizeof(int), 1, file);
-	fwrite(&player->player_class, sizeof(class_type_t), 1, file);
-	fwrite(&player->lantern, sizeof(lantern_t), 1, file);
+	fwrite_checked(&player->mana, sizeof(int), 1, file);
+	fwrite_checked(&player->max_mana, sizeof(int), 1, file);
+	fwrite_checked(&player->action_points, sizeof(int), 1, file);
+	fwrite_checked(&player->player_class, sizeof(class_type_t), 1, file);
+	fwrite_checked(&player->lantern, sizeof(lantern_t), 1, file);
 	
-	fwrite(&player->equipment.attack_weapon, sizeof(item_ids_t), 1, file);
-	fwrite(&player->equipment.armor_id, sizeof(item_ids_t), 1, file);
-	fwrite(&player->equipment.main_hand_id, sizeof(item_ids_t), 1, file);
-	fwrite(&player->equipment.off_hand_id, sizeof(item_ids_t), 1, file);
-	fwrite(&player->equipment.spell1_id, sizeof(item_ids_t), 1, file);
-	fwrite(&player->equipment.spell2_id, sizeof(item_ids_t), 1, file);
-	fwrite(&player->equipment.spell3_id, sizeof(item_ids_t), 1, file);
-	fwrite(&player->equipment.main_hand_two_handed, sizeof(bool), 1, file);
+	fwrite_checked(&player->equipment.attack_weapon, sizeof(item_ids_t), 1, file);
+	fwrite_checked(&player->equipment.armor_id, sizeof(item_ids_t), 1, file);
+	fwrite_checked(&player->equipment.main_hand_id, sizeof(item_ids_t), 1, file);
+	fwrite_checked(&player->equipment.off_hand_id, sizeof(item_ids_t), 1, file);
+	fwrite_checked(&player->equipment.spell1_id, sizeof(item_ids_t), 1, file);
+	fwrite_checked(&player->equipment.spell2_id, sizeof(item_ids_t), 1, file);
+	fwrite_checked(&player->equipment.spell3_id, sizeof(item_ids_t), 1, file);
+	fwrite_checked(&player->equipment.main_hand_two_handed, sizeof(bool), 1, file);
 	
-	fwrite(&player->oil, sizeof(int), 1, file);
-	fwrite(&player->state, sizeof(player_state_t), 1, file);
-	fwrite(&player->inventory_manager, sizeof(inventory_manager_t), 1, file);
+	fwrite_checked(&player->oil, sizeof(int), 1, file);
+	fwrite_checked(&player->state, sizeof(player_state_t), 1, file);
+	fwrite_checked(&player->inventory_manager, sizeof(inventory_manager_t), 1, file);
 	
 }
 
@@ -135,118 +153,118 @@ void save_world(world_t *world, FILE *file) {
 		for(int y = 0; y < WORLD_HEIGHT; y++) {
 			if(!world->room[x][y]->is_created) {
 				int invalid = -1;
-				fwrite(&invalid, sizeof(int), 1, file);
-				fwrite(&invalid, sizeof(int), 1, file);
+				fwrite_checked(&invalid, sizeof(int), 1, file);
+				fwrite_checked(&invalid, sizeof(int), 1, file);
 				continue;
 			}
-			fwrite(&x, sizeof(int), 1, file);
-			fwrite(&y, sizeof(int), 1, file);
+			fwrite_checked(&x, sizeof(int), 1, file);
+			fwrite_checked(&y, sizeof(int), 1, file);
 			save_room(world->room[x][y], file);
 		}
 	}
-	fwrite(&world->seed, sizeof(int), 1, file);
+	fwrite_checked(&world->seed, sizeof(int), 1, file);
 	
-	fwrite(&world->messages_size, sizeof(int), 1, file);
-	fwrite(&world->max_message_storage, sizeof(int), 1, file);
+	fwrite_checked(&world->messages_size, sizeof(int), 1, file);
+	fwrite_checked(&world->max_message_storage, sizeof(int), 1, file);
 	
 	for(int i = 0; i < world->messages_size; i++) {
 		int len = strlen(world->messages[i]) + 1;
-		fwrite(&len, sizeof(int), 1, file);
-		fwrite(world->messages[i], sizeof(char), len, file);
+		fwrite_checked(&len, sizeof(int), 1, file);
+		fwrite_checked(world->messages[i], sizeof(char), len, file);
 	}
 	
-	fwrite(&world->turn_order_size, sizeof(int), 1, file);
-	fwrite(world->turn_order, sizeof(int), world->turn_order_size, file);
-	fwrite(&world->room_template_count, sizeof(int), 1, file);
-	fwrite(&world->room_templates, sizeof(room_template_t), world->room_template_count, file);
-	fwrite(&world->is_player_turn, sizeof(bool), 1, file);
-	fwrite(&world->buff_size, sizeof(uint8_t), 1, file);
-	fwrite(&world->buff_count, sizeof(uint8_t), 1, file);
+	fwrite_checked(&world->turn_order_size, sizeof(int), 1, file);
+	fwrite_checked(world->turn_order, sizeof(int), world->turn_order_size, file);
+	fwrite_checked(&world->room_template_count, sizeof(int), 1, file);
+	fwrite_checked(&world->room_templates, sizeof(room_template_t), world->room_template_count, file);
+	fwrite_checked(&world->is_player_turn, sizeof(bool), 1, file);
+	fwrite_checked(&world->buff_size, sizeof(uint8_t), 1, file);
+	fwrite_checked(&world->buff_count, sizeof(uint8_t), 1, file);
 	for(int i = 0; i < world->buff_count; i++) {
 		save_buff(&world->buffs[i], world, file);
 	}
 }
 
 void save_room(room_t *room, FILE *file) {
-	fwrite(room->room_file_name, sizeof(char), ROOM_FILE_NAME_MAX_SIZE, file);
+	fwrite_checked(room->room_file_name, sizeof(char), ROOM_FILE_NAME_MAX_SIZE, file);
 	for(int x = 0; x < ROOM_WIDTH; x++) {
 		for(int y = 0; y < ROOM_HEIGHT; y++) {
-			// fwrite(&room->tiles[y][x]->floor, sizeof(char), 1, file);
-			fwrite(&room->tiles[y][x]->item_count, sizeof(int8_t), 1, file);
+			// fwrite_checked(&room->tiles[y][x]->floor, sizeof(char), 1, file);
+			fwrite_checked(&room->tiles[y][x]->item_count, sizeof(int8_t), 1, file);
 			for(int i = 0; i < room->tiles[y][x]->item_count; i++) {
-				fwrite(&room->tiles[y][x]->items[i]->id, sizeof(item_ids_t), 1, file);
-				fwrite(&room->tiles[y][x]->items[i]->stack, sizeof(int), 1, file);
+				fwrite_checked(&room->tiles[y][x]->items[i]->id, sizeof(item_ids_t), 1, file);
+				fwrite_checked(&room->tiles[y][x]->items[i]->stack, sizeof(int), 1, file);
 			}
 		}
 	}
-	fwrite(&room->current_pot_count, sizeof(int8_t), 1, file);
+	fwrite_checked(&room->current_pot_count, sizeof(int8_t), 1, file);
 	for(int i = 0; i < room->current_pot_count; i++) {
-		fwrite(&room->pots[i].x, sizeof(int8_t), 1, file);
-		fwrite(&room->pots[i].y, sizeof(int8_t), 1, file);
-		fwrite(&room->pots[i].broken, sizeof(bool), 1, file);
+		fwrite_checked(&room->pots[i].x, sizeof(int8_t), 1, file);
+		fwrite_checked(&room->pots[i].y, sizeof(int8_t), 1, file);
+		fwrite_checked(&room->pots[i].broken, sizeof(bool), 1, file);
 	}
-	fwrite(&room->deleted_trap_count, sizeof(uint8_t), 1, file);
+	fwrite_checked(&room->deleted_trap_count, sizeof(uint8_t), 1, file);
 	for(int i = 0; i < room->deleted_trap_count; i++) {
-		fwrite(&room->deleted_trap_x[i], sizeof(uint8_t), 1, file);
-		fwrite(&room->deleted_trap_y[i], sizeof(uint8_t), 1, file);
+		fwrite_checked(&room->deleted_trap_x[i], sizeof(uint8_t), 1, file);
+		fwrite_checked(&room->deleted_trap_y[i], sizeof(uint8_t), 1, file);
 	}
-	fwrite(&room->current_enemy_count, sizeof(int8_t), 1, file);
+	fwrite_checked(&room->current_enemy_count, sizeof(int8_t), 1, file);
 	for (int i = 0; i < room->current_enemy_count; i++) {
-		fwrite(room->enemies[i], sizeof(enemy_t), 1, file);
+		fwrite_checked(room->enemies[i], sizeof(enemy_t), 1, file);
 	}
-	fwrite(&room->is_created, sizeof(bool), 1, file);
-	fwrite(&room->global_time, sizeof(int), 1, file);
-	fwrite(&room->biome, sizeof(biome_t), 1, file);
-	fwrite(&room->is_main_path, sizeof(bool), 1, file);
-	fwrite(&room->door_mask, sizeof(uint8_t), 1, file);
+	fwrite_checked(&room->is_created, sizeof(bool), 1, file);
+	fwrite_checked(&room->global_time, sizeof(int), 1, file);
+	fwrite_checked(&room->biome, sizeof(biome_t), 1, file);
+	fwrite_checked(&room->is_main_path, sizeof(bool), 1, file);
+	fwrite_checked(&room->door_mask, sizeof(uint8_t), 1, file);
 }
 
 void save_buff(buff_t *buff, world_t *world, FILE *file) {
-	fwrite(&buff->turns_left, sizeof(int), 1, file);
-	fwrite(&buff->name, sizeof(char), BUFF_NAME_MAX_LEN, file);
-	fwrite(&buff->type, sizeof(enum buff_type), 1, file);
-	fwrite(&buff->flat_strength, sizeof(float), 1, file);
-	fwrite(&buff->flat_dexterity, sizeof(float), 1, file);
-	fwrite(&buff->flat_intelligence, sizeof(float), 1, file);
-	fwrite(&buff->flat_constitution, sizeof(float), 1, file);
-	fwrite(&buff->flat_speed, sizeof(float), 1, file);
-	fwrite(&buff->percent_strength, sizeof(float), 1, file);
-	fwrite(&buff->percent_dexterity, sizeof(float), 1, file);
-	fwrite(&buff->percent_intelligence, sizeof(float), 1, file);
-	fwrite(&buff->percent_constitution, sizeof(float), 1, file);
-	fwrite(&buff->percent_speed, sizeof(float), 1, file);
-	fwrite(&buff->applied, sizeof(bool), 1, file);
-	fwrite(&buff->target_type_id, sizeof(enum target_type), 1, file);
+	fwrite_checked(&buff->turns_left, sizeof(int), 1, file);
+	fwrite_checked(&buff->name, sizeof(char), BUFF_NAME_MAX_LEN, file);
+	fwrite_checked(&buff->type, sizeof(enum buff_type), 1, file);
+	fwrite_checked(&buff->flat_strength, sizeof(float), 1, file);
+	fwrite_checked(&buff->flat_dexterity, sizeof(float), 1, file);
+	fwrite_checked(&buff->flat_intelligence, sizeof(float), 1, file);
+	fwrite_checked(&buff->flat_constitution, sizeof(float), 1, file);
+	fwrite_checked(&buff->flat_speed, sizeof(float), 1, file);
+	fwrite_checked(&buff->percent_strength, sizeof(float), 1, file);
+	fwrite_checked(&buff->percent_dexterity, sizeof(float), 1, file);
+	fwrite_checked(&buff->percent_intelligence, sizeof(float), 1, file);
+	fwrite_checked(&buff->percent_constitution, sizeof(float), 1, file);
+	fwrite_checked(&buff->percent_speed, sizeof(float), 1, file);
+	fwrite_checked(&buff->applied, sizeof(bool), 1, file);
+	fwrite_checked(&buff->target_type_id, sizeof(enum target_type), 1, file);
 	if(buff->target_type_id == TARGET_ENEMY) {
-		fwrite(&buff->target.enemy->global_x, sizeof(int), 1, file);
-		fwrite(&buff->target.enemy->global_y, sizeof(int), 1, file);
-		fwrite(&buff->target.enemy->x, sizeof(int), 1, file);
-		fwrite(&buff->target.enemy->y, sizeof(int), 1, file);
+		fwrite_checked(&buff->target.enemy->global_x, sizeof(int), 1, file);
+		fwrite_checked(&buff->target.enemy->global_y, sizeof(int), 1, file);
+		fwrite_checked(&buff->target.enemy->x, sizeof(int), 1, file);
+		fwrite_checked(&buff->target.enemy->y, sizeof(int), 1, file);
 	}
 }
 
 void load_buff(buff_t *buff, world_t *world, player_t *player, FILE *file) {
-	fread(&buff->turns_left, sizeof(int), 1, file);
-	fread(&buff->name, sizeof(char), BUFF_NAME_MAX_LEN, file);
-	fread(&buff->type, sizeof(enum buff_type), 1, file);
-	fread(&buff->flat_strength, sizeof(float), 1, file);
-	fread(&buff->flat_dexterity, sizeof(float), 1, file);
-	fread(&buff->flat_intelligence, sizeof(float), 1, file);
-	fread(&buff->flat_constitution, sizeof(float), 1, file);
-	fread(&buff->flat_speed, sizeof(float), 1, file);
-	fread(&buff->percent_strength, sizeof(float), 1, file);
-	fread(&buff->percent_dexterity, sizeof(float), 1, file);
-	fread(&buff->percent_intelligence, sizeof(float), 1, file);
-	fread(&buff->percent_constitution, sizeof(float), 1, file);
-	fread(&buff->percent_speed, sizeof(float), 1, file);
-	fread(&buff->applied, sizeof(bool), 1, file);
-	fread(&buff->target_type_id, sizeof(enum target_type), 1, file);
+	fread_checked(&buff->turns_left, sizeof(int), 1, file);
+	fread_checked(&buff->name, sizeof(char), BUFF_NAME_MAX_LEN, file);
+	fread_checked(&buff->type, sizeof(enum buff_type), 1, file);
+	fread_checked(&buff->flat_strength, sizeof(float), 1, file);
+	fread_checked(&buff->flat_dexterity, sizeof(float), 1, file);
+	fread_checked(&buff->flat_intelligence, sizeof(float), 1, file);
+	fread_checked(&buff->flat_constitution, sizeof(float), 1, file);
+	fread_checked(&buff->flat_speed, sizeof(float), 1, file);
+	fread_checked(&buff->percent_strength, sizeof(float), 1, file);
+	fread_checked(&buff->percent_dexterity, sizeof(float), 1, file);
+	fread_checked(&buff->percent_intelligence, sizeof(float), 1, file);
+	fread_checked(&buff->percent_constitution, sizeof(float), 1, file);
+	fread_checked(&buff->percent_speed, sizeof(float), 1, file);
+	fread_checked(&buff->applied, sizeof(bool), 1, file);
+	fread_checked(&buff->target_type_id, sizeof(enum target_type), 1, file);
 	if(buff->target_type_id == TARGET_ENEMY) {
 		int target_gx, target_gy, target_x, target_y;
-		fread(&target_gx, sizeof(int), 1, file);
-		fread(&target_gy, sizeof(int), 1, file);
-		fread(&target_x, sizeof(int), 1, file);
-		fread(&target_y, sizeof(int), 1, file);
+		fread_checked(&target_gx, sizeof(int), 1, file);
+		fread_checked(&target_gy, sizeof(int), 1, file);
+		fread_checked(&target_x, sizeof(int), 1, file);
+		fread_checked(&target_y, sizeof(int), 1, file);
 		//TODO this is insane and probably won't even work... this is like 5 or 6 nested loops
 		for(int gx = 0; gx < WORLD_WIDTH; gx++) {
 			for(int gy = 0; gy < WORLD_HEIGHT; gy++) {
@@ -271,32 +289,32 @@ void load_buff(buff_t *buff, world_t *world, player_t *player, FILE *file) {
 }
 
 void load_player(player_t *player, FILE *file, item_data_t *item_data) {
-	fread(&player->level, sizeof(int), 1, file);
-	fread(&player->xp, sizeof(int), 1, file);
-	fread(&player->health, sizeof(int), 1, file);
-	fread(&player->max_health, sizeof(int), 1, file);
-	fread(&player->strength, sizeof(float), 1, file);
-	fread(&player->dexterity, sizeof(float), 1, file);
-	fread(&player->intelligence, sizeof(float), 1, file);
-	fread(&player->constitution, sizeof(float), 1, file);
-	fread(&player->speed, sizeof(float), 1, file);
-	fread(&player->x, sizeof(int), 1, file);
-	fread(&player->y, sizeof(int), 1, file);
-	fread(&player->global_x, sizeof(int), 1, file);
-	fread(&player->global_y, sizeof(int), 1, file);
+	fread_checked(&player->level, sizeof(int), 1, file);
+	fread_checked(&player->xp, sizeof(int), 1, file);
+	fread_checked(&player->health, sizeof(int), 1, file);
+	fread_checked(&player->max_health, sizeof(int), 1, file);
+	fread_checked(&player->strength, sizeof(float), 1, file);
+	fread_checked(&player->dexterity, sizeof(float), 1, file);
+	fread_checked(&player->intelligence, sizeof(float), 1, file);
+	fread_checked(&player->constitution, sizeof(float), 1, file);
+	fread_checked(&player->speed, sizeof(float), 1, file);
+	fread_checked(&player->x, sizeof(int), 1, file);
+	fread_checked(&player->y, sizeof(int), 1, file);
+	fread_checked(&player->global_x, sizeof(int), 1, file);
+	fread_checked(&player->global_y, sizeof(int), 1, file);
 
-	fread(&player->equipment.spell1, sizeof(int), 1, file);
-	fread(&player->equipment.spell2, sizeof(int), 1, file);
-	fread(&player->equipment.spell3, sizeof(int), 1, file);
+	fread_checked(&player->equipment.spell1, sizeof(int), 1, file);
+	fread_checked(&player->equipment.spell2, sizeof(int), 1, file);
+	fread_checked(&player->equipment.spell3, sizeof(int), 1, file);
 
-	fread(&player->inventory_count, sizeof(int), 1, file);
+	fread_checked(&player->inventory_count, sizeof(int), 1, file);
 	for(int i = 0; i < player->inventory_count; i++) {
-		fread(&player->inventory[i].id, sizeof(item_ids_t), 1, file); // TODO this causes save files to not work if you add any items at all, should probably store this as a string
-		fread(&player->inventory[i].stack, sizeof(int), 1, file);
+		fread_checked(&player->inventory[i].id, sizeof(item_ids_t), 1, file); // TODO this causes save files to not work if you add any items at all, should probably store this as a string
+		fread_checked(&player->inventory[i].stack, sizeof(int), 1, file);
 		if(player->inventory[i].stack == 0) continue;
 		load_item_from_data(&player->inventory[i], item_data);
 		if(player->inventory[i].value_type == VALUE_TYPE_WEAPON) {
-			fread(&player->inventory[i].stat_type.weapon.equipped, sizeof(bool), 1, file);
+			fread_checked(&player->inventory[i].stat_type.weapon.equipped, sizeof(bool), 1, file);
 			if(player->inventory[i].stat_type.weapon.equipped) {
 				if(player->inventory[i].stat_type.weapon.main_hand) {
 					player->equipment.main_hand = i;
@@ -306,37 +324,37 @@ void load_player(player_t *player, FILE *file, item_data_t *item_data) {
 			}
 			
 		} else if(player->inventory[i].value_type == VALUE_TYPE_ARMOR) {
-			fread(&player->inventory[i].stat_type.armor.equipped, sizeof(bool), 1, file);
+			fread_checked(&player->inventory[i].stat_type.armor.equipped, sizeof(bool), 1, file);
 			if(player->inventory[i].stat_type.armor.equipped) {
 				player->equipment.armor = i;
 			}
 		}
 	}
-	fread(&player->nearby_loot_count, sizeof(int), 1, file);
+	fread_checked(&player->nearby_loot_count, sizeof(int), 1, file);
 	for(int i = 0; i < player->nearby_loot_count; i++) {
-		fread(&player->nearby_loot[i]->id, sizeof(item_ids_t), 1, file);
-		fread(&player->nearby_loot[i]->stack, sizeof(int), 1, file);
+		fread_checked(&player->nearby_loot[i]->id, sizeof(item_ids_t), 1, file);
+		fread_checked(&player->nearby_loot[i]->stack, sizeof(int), 1, file);
 	}
 	
-	fread(&player->mana, sizeof(int), 1, file);
-	fread(&player->max_mana, sizeof(int), 1, file);
-	fread(&player->action_points, sizeof(int), 1, file);
-	fread(&player->player_class, sizeof(class_type_t), 1, file);
-	fread(&player->lantern, sizeof(lantern_t), 1, file);
+	fread_checked(&player->mana, sizeof(int), 1, file);
+	fread_checked(&player->max_mana, sizeof(int), 1, file);
+	fread_checked(&player->action_points, sizeof(int), 1, file);
+	fread_checked(&player->player_class, sizeof(class_type_t), 1, file);
+	fread_checked(&player->lantern, sizeof(lantern_t), 1, file);
 	
-	fread(&player->equipment.attack_weapon, sizeof(item_ids_t), 1, file);
-	fread(&player->equipment.armor_id, sizeof(item_ids_t), 1, file);
-	fread(&player->equipment.main_hand_id, sizeof(item_ids_t), 1, file);
-	fread(&player->equipment.off_hand_id, sizeof(item_ids_t), 1, file);
-	fread(&player->equipment.spell1_id, sizeof(item_ids_t), 1, file);
-	fread(&player->equipment.spell2_id, sizeof(item_ids_t), 1, file);
-	fread(&player->equipment.spell3_id, sizeof(item_ids_t), 1, file);
+	fread_checked(&player->equipment.attack_weapon, sizeof(item_ids_t), 1, file);
+	fread_checked(&player->equipment.armor_id, sizeof(item_ids_t), 1, file);
+	fread_checked(&player->equipment.main_hand_id, sizeof(item_ids_t), 1, file);
+	fread_checked(&player->equipment.off_hand_id, sizeof(item_ids_t), 1, file);
+	fread_checked(&player->equipment.spell1_id, sizeof(item_ids_t), 1, file);
+	fread_checked(&player->equipment.spell2_id, sizeof(item_ids_t), 1, file);
+	fread_checked(&player->equipment.spell3_id, sizeof(item_ids_t), 1, file);
 
-	fread(&player->equipment.main_hand_two_handed, sizeof(bool), 1, file);
+	fread_checked(&player->equipment.main_hand_two_handed, sizeof(bool), 1, file);
 	
-	fread(&player->oil, sizeof(int), 1, file);
-	fread(&player->state, sizeof(player_state_t), 1, file);
-	fread(&player->inventory_manager, sizeof(inventory_manager_t), 1, file);
+	fread_checked(&player->oil, sizeof(int), 1, file);
+	fread_checked(&player->state, sizeof(player_state_t), 1, file);
+	fread_checked(&player->inventory_manager, sizeof(inventory_manager_t), 1, file);
 }
 
 void load_world(world_t *world, player_t *player, FILE *file) {
@@ -344,18 +362,18 @@ void load_world(world_t *world, player_t *player, FILE *file) {
 		for(int y = 0; y < WORLD_HEIGHT; y++) {
 			int next_room_x = 0; 
 			int next_room_y = 0;
-			fread(&next_room_x, sizeof(int), 1, file);
-			fread(&next_room_y, sizeof(int), 1, file);
+			fread_checked(&next_room_x, sizeof(int), 1, file);
+			fread_checked(&next_room_y, sizeof(int), 1, file);
 			if(y == next_room_y && x == next_room_x) {
 				load_room_save(world->room[x][y], file, world->item_data);
 			}
 		}
 	}
-	fread(&world->seed, sizeof(int), 1, file);
+	fread_checked(&world->seed, sizeof(int), 1, file);
 	DEBUG_LOG("seed: %d", world->seed);
 	
-	fread(&world->messages_size, sizeof(int), 1, file);
-	fread(&world->max_message_storage, sizeof(int), 1, file);
+	fread_checked(&world->messages_size, sizeof(int), 1, file);
+	fread_checked(&world->max_message_storage, sizeof(int), 1, file);
 	
 	world->messages = calloc(world->max_message_storage, sizeof(char *));
 	for(int i = 0; i < world->max_message_storage; i++) {
@@ -364,24 +382,24 @@ void load_world(world_t *world, player_t *player, FILE *file) {
 	
 	for(int i = 0; i < world->messages_size; i++) {
 		int len;
-		fread(&len, sizeof(int), 1, file);
-		fread(world->messages[i], sizeof(char), len, file);
+		fread_checked(&len, sizeof(int), 1, file);
+		fread_checked(world->messages[i], sizeof(char), len, file);
 	}
 	
-	fread(&world->turn_order_size, sizeof(int), 1, file);
-	fread(world->turn_order, sizeof(int), world->turn_order_size, file);
-	fread(&world->room_template_count, sizeof(int), 1, file);
-	fread(&world->room_templates, sizeof(room_template_t), world->room_template_count, file);
-	fread(&world->is_player_turn, sizeof(bool), 1, file);
-	fread(&world->buff_size, sizeof(uint8_t), 1, file);
-	fread(&world->buff_count, sizeof(uint8_t), 1, file);
+	fread_checked(&world->turn_order_size, sizeof(int), 1, file);
+	fread_checked(world->turn_order, sizeof(int), world->turn_order_size, file);
+	fread_checked(&world->room_template_count, sizeof(int), 1, file);
+	fread_checked(&world->room_templates, sizeof(room_template_t), world->room_template_count, file);
+	fread_checked(&world->is_player_turn, sizeof(bool), 1, file);
+	fread_checked(&world->buff_size, sizeof(uint8_t), 1, file);
+	fread_checked(&world->buff_count, sizeof(uint8_t), 1, file);
 	for(int i = 0; i < world->buff_count; i++) {
 		load_buff(&world->buffs[i], world, player, file);
 	}
 }
 
 void load_room_save(room_t *room, FILE *file, item_data_t *item_data) {
-	fread(room->room_file_name, sizeof(char), ROOM_FILE_NAME_MAX_SIZE, file);
+	fread_checked(room->room_file_name, sizeof(char), ROOM_FILE_NAME_MAX_SIZE, file);
 	for(int tile_y = 0; tile_y < ROOM_HEIGHT; tile_y++) {
 		for(int tile_x = 0; tile_x < ROOM_WIDTH; tile_x++) {
 			room->tiles[tile_y][tile_x] = calloc(1, sizeof(tile_t));
@@ -392,37 +410,37 @@ void load_room_save(room_t *room, FILE *file, item_data_t *item_data) {
 	}
 	for(int x = 0; x < ROOM_WIDTH; x++) {
 		for(int y = 0; y < ROOM_HEIGHT; y++) {
-			// fwrite(&room->tiles[y][x]->floor, sizeof(char), 1, file);
-			fread(&room->tiles[y][x]->item_count, sizeof(int8_t), 1, file);
+			// fwrite_checked(&room->tiles[y][x]->floor, sizeof(char), 1, file);
+			fread_checked(&room->tiles[y][x]->item_count, sizeof(int8_t), 1, file);
 			for(int i = 0; i < room->tiles[y][x]->item_count; i++) {
-				fread(&room->tiles[y][x]->items[i]->id, sizeof(item_ids_t), 1, file);
-				fread(&room->tiles[y][x]->items[i]->stack, sizeof(int), 1, file);
+				fread_checked(&room->tiles[y][x]->items[i]->id, sizeof(item_ids_t), 1, file);
+				fread_checked(&room->tiles[y][x]->items[i]->stack, sizeof(int), 1, file);
 				load_item_from_data(room->tiles[y][x]->items[i], item_data);
 			}
 		}
 	}
 
-	fread(&room->current_pot_count, sizeof(int8_t), 1, file);
+	fread_checked(&room->current_pot_count, sizeof(int8_t), 1, file);
 	for(int i = 0; i < room->current_pot_count; i++) {
-		fread(&room->pots[i].x, sizeof(int8_t), 1, file);
-		fread(&room->pots[i].y, sizeof(int8_t), 1, file);
-		fread(&room->pots[i].broken, sizeof(bool), 1, file);
+		fread_checked(&room->pots[i].x, sizeof(int8_t), 1, file);
+		fread_checked(&room->pots[i].y, sizeof(int8_t), 1, file);
+		fread_checked(&room->pots[i].broken, sizeof(bool), 1, file);
 	}
 
-	fread(&room->deleted_trap_count, sizeof(uint8_t), 1, file);
+	fread_checked(&room->deleted_trap_count, sizeof(uint8_t), 1, file);
 	for(int i = 0; i < room->deleted_trap_count; i++) {
-		fread(&room->deleted_trap_x[i], sizeof(uint8_t), 1, file);
-		fread(&room->deleted_trap_y[i], sizeof(uint8_t), 1, file);
+		fread_checked(&room->deleted_trap_x[i], sizeof(uint8_t), 1, file);
+		fread_checked(&room->deleted_trap_y[i], sizeof(uint8_t), 1, file);
 	}
 
-	fread(&room->current_enemy_count, sizeof(int8_t), 1, file);
+	fread_checked(&room->current_enemy_count, sizeof(int8_t), 1, file);
 	for (int i = 0; i < room->current_enemy_count; i++) {
-		fread(room->enemies[i], sizeof(enemy_t), 1, file);
+		fread_checked(room->enemies[i], sizeof(enemy_t), 1, file);
 	}
-	fread(&room->is_created, sizeof(bool), 1, file);
-	fread(&room->global_time, sizeof(int), 1, file);
-	fread(&room->biome, sizeof(biome_t), 1, file);
-	fread(&room->is_main_path, sizeof(bool), 1, file);
-	fread(&room->door_mask, sizeof(uint8_t), 1, file);
+	fread_checked(&room->is_created, sizeof(bool), 1, file);
+	fread_checked(&room->global_time, sizeof(int), 1, file);
+	fread_checked(&room->biome, sizeof(biome_t), 1, file);
+	fread_checked(&room->is_main_path, sizeof(bool), 1, file);
+	fread_checked(&room->door_mask, sizeof(uint8_t), 1, file);
 	load_room_floor_tiles(room);
 }

@@ -6,4 +6,8 @@
 int compare4(int a, int b, int c, int d);
 unsigned int cantor_pair(int x, int y);
 int rand_r_portable(unsigned int *seed);
+
+char *my_strdup(char *str);
+
+void strcat_front(char *dst, char *prefix, int dst_capacity);
 #endif

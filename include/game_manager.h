@@ -7,6 +7,7 @@
 
 void draw(world_t *world, player_t *player);
 bool manage_input(char c, world_t *world, player_t *player, menu_manager_t *menu_manager);
+bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t *menus);
 
 void display_world_message(world_t *world, const char *str);
 

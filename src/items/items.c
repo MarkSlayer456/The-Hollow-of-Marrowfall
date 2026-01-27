@@ -232,28 +232,36 @@ double get_percent_from_grade(enum grade g) {
     return GRADE_Z_PERCENT;
 }
 
+void item_mark_as_unchanged(item_t *item) {
+    item->has_changed = false;
+}
+
+void item_mark_as_changed(item_t *item) {
+    item->has_changed = true;
+}
+
 // returns 1 on success and 0 on fail
-int use_item(player_t *player)
+int use_item(menu_t *menu, player_t *player)
 {
 	int success = 0;
-    DEBUG_LOG("current id: %d", player->inventory_manager.inv_selector);
-	if(player->inventory[player->inventory_manager.inv_selector].stack > 0) {
-        if(player->inventory[player->inventory_manager.inv_selector].value_type == VALUE_TYPE_ARMOR) {
-            success = handle_armor_change(player, player->inventory_manager.inv_selector);
-        } else if(player->inventory[player->inventory_manager.inv_selector].value_type == VALUE_TYPE_WEAPON) {
-            success = handle_weapon_change(player, player->inventory_manager.inv_selector);
-        } else if(player->inventory[player->inventory_manager.inv_selector].value_type == VALUE_TYPE_FOOD) {
+    int item_index = menu->selected+menu->offset;
+    item_t item = player->inventory[item_index];
+    item_mark_as_changed(&item);
+	if(item.stack > 0) {
+        if(item.value_type == VALUE_TYPE_ARMOR) {
+            success = handle_armor_change(player, item_index);
+        } else if(item.value_type == VALUE_TYPE_WEAPON) {
+            success = handle_weapon_change(player, item_index);
+        } else if(item.value_type == VALUE_TYPE_FOOD) {
             //TODO effects with durations
-            player_increase_health(player, player->inventory[player->inventory_manager.inv_selector].stat_type.food.heal_amount);
-            player_increase_mana(player, player->inventory[player->inventory_manager.inv_selector].stat_type.food.mana_heal_amount);
-            remove_item(player);
+            player_increase_health(player, item.stat_type.food.heal_amount);
+            player_increase_mana(player, item.stat_type.food.mana_heal_amount);
+            remove_item(menu, player);
             success = 1;
-        } else if(player->inventory[player->inventory_manager.inv_selector].value_type == VALUE_TYPE_SPELL) {
+        } else if(item.value_type == VALUE_TYPE_SPELL) {
             player->state = PLAYER_STATE_EQUIPPING_SPELL;
-            // display_popup_menu(player, player->spell_equip_menu);
-            // success = handle_spell_one_change(player, player->inventory_manager.inv_selector);
         } else {
-            switch(player->inventory[player->inventory_manager.inv_selector].id) {
+            switch(item.id) {
                 case BLANK:
                     success = 0;
                 case TELEPORT_SCROLL:
@@ -262,7 +270,7 @@ int use_item(player_t *player)
                 default:
                     success = 0;
             }
-            remove_item(player);
+            remove_item(menu, player);
         }
         if(success) {
             player_close_inventory(player);
@@ -271,13 +279,13 @@ int use_item(player_t *player)
 	return success;
 }
 
-void equip_spell(player_t *player, int spell_slot) {
+void equip_spell(player_t *player, int spell_slot, int inv_index) {
     if(spell_slot == 1) {
-        handle_spell_one_change(player, player->inventory_manager.inv_selector);
+        handle_spell_one_change(player, inv_index);
     } else if(spell_slot == 2) {
-        handle_spell_two_change(player, player->inventory_manager.inv_selector);
+        handle_spell_two_change(player, inv_index);
     } else if(spell_slot == 3) {
-        handle_spell_three_change(player, player->inventory_manager.inv_selector);
+        handle_spell_three_change(player, inv_index);
     }
 }
 
@@ -494,11 +502,12 @@ int use_teleport_scroll(player_t *player)
 	return 0;
 }
 
-void remove_item(player_t *player)
+void remove_item(menu_t *menu, player_t *player)
 {
-	player->inventory[player->inventory_manager.inv_selector].stack--;
-	if(player->inventory[player->inventory_manager.inv_selector].stack <= 0) {
-		player_organize_inv(player, player->inventory_manager.inv_selector);
+    int item_index = menu->selected+menu->offset;
+	player->inventory[item_index].stack--;
+	if(player->inventory[item_index].stack <= 0) {
+		player_organize_inv(player, menu, item_index);
 	}
 }
 void item_spawn(item_ids_t id, room_t *room, tile_t *tile, item_data_t *item_data) {

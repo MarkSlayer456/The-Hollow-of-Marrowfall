@@ -92,6 +92,8 @@ typedef struct {
 typedef struct {
 	SDL_Texture *texture;
 	SDL_Rect rect;
+	SDL_Texture *texture2;
+	SDL_Rect rect2;
 } SDL_Data;
 
 typedef struct {
@@ -100,9 +102,21 @@ typedef struct {
 } sprite_t;
 
 typedef struct {
-	SDL_Data sdl_data;
-	char *str;
+	const char *str;
 	int font_size;
+} const_data_menu_item_t;
+
+typedef struct {
+	char str[256];
+	int font_size;
+} dynamic_data_menu_item_t;
+
+typedef struct {
+	SDL_Data sdl_data;
+	union {
+		const_data_menu_item_t const_data;
+		dynamic_data_menu_item_t dynamic_data;
+	} data_type;
 } menu_data_item_t;
 
 typedef struct {
@@ -111,13 +125,22 @@ typedef struct {
 	SDL_Texture *texture;
 } SDL_Context;
 
-typedef struct {
+typedef struct menu menu_t;
+
+struct menu {
 	menu_data_item_t *data;
-	enum menu *dests;
+	enum menu_id *dests;
+	void (*operation)(void *ctx1, void *ctx2, void *ctx3);
+	void *operation_ctx1;
+	void *operation_ctx2;
+	void *operation_ctx3;
 	int16_t menu_item_size;
 	int selected;
 	int selectable_size; // the number of items that are selectable
 	int select_start_offset; // the offset in the array where selection starts, this avoids titles and such
-} menu_t;
+	int display_max; // max number of items displayed before scrolling
+	int offset;
+	int offset_max;
+};
 
 #endif

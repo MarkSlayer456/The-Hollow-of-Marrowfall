@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	world_t *world = malloc(sizeof(world_t));
-	world->is_player_turn = false;
+	world->is_player_turn = true;
 	world->enemy_data = calloc(MAX_ENEMIES, sizeof(enemy_data_t));
 	for(int row = 0; row < MAX_ENEMIES; row++) {
 		for(int i = 0; i < NUMBER_OF_BIOMES; i++) {
@@ -170,6 +170,19 @@ int main(int argc, char *argv[]) {
 	world->room[0][0]->door_mask = 0x6;
 	drop_item(world->room[0][0]->tiles[10][1], world->item_data, FIREBALL_SPELL_BOOK, 1);
 	drop_item(world->room[0][0]->tiles[10][1], world->item_data, POISON_SPELL_BOOK, 1);
+	drop_item(world->room[0][0]->tiles[10][1], world->item_data, HEALTH_POTION, 1);
+	drop_item(world->room[0][0]->tiles[10][1], world->item_data, APPLE, 1);
+	drop_item(world->room[0][0]->tiles[10][1], world->item_data, ROTTEN_APPLE, 1);
+	drop_item(world->room[0][0]->tiles[10][1], world->item_data, CHICKEN_DINNER, 1);
+	drop_item(world->room[0][0]->tiles[10][2], world->item_data, RAT_MEAT, 1);
+	drop_item(world->room[0][0]->tiles[10][2], world->item_data, DRAGONFIRE_JERKY, 1);
+	drop_item(world->room[0][0]->tiles[10][2], world->item_data, CELESTIAL_CORNBREAD, 1);
+	drop_item(world->room[0][0]->tiles[10][2], world->item_data, NIGHTBLOOM_GRAPES, 1);
+	drop_item(world->room[0][0]->tiles[10][2], world->item_data, PIZZA, 1);
+	drop_item(world->room[0][0]->tiles[11][1], world->item_data, BEAR_CHILI, 1);
+	drop_item(world->room[0][0]->tiles[11][1], world->item_data, BLACKSTONE_ARMOR, 1);
+	drop_item(world->room[0][0]->tiles[11][1], world->item_data, BRONZE_ARMOR, 1);
+
 	calculate_door_masks(world);
 	calculate_main_path(&world->seed, world);
 	
@@ -182,19 +195,28 @@ int main(int argc, char *argv[]) {
 	SDL_RenderPresent(ctx.renderer);
 	menu_t menus[MENU_COUNT] = {
 		[MAIN_MENU] = {0},
-		[CLASS_MENU] = {0},
 		[LOAD_MENU] = {0},
+		[SAVE_MENU] = {0},
+		[LOG_BOOK_MENU] = {0},
+		[CLASS_MENU] = {0},
+		[GAME] = {0},
+		[INVENTORY_MENU] = {0},
+		[LOOT_MENU] = {0},
+		[SPELL_MENU] = {0},
 	};
 	// menu_t main_menu = {0};
-	main_menu_init(&menus[MAIN_MENU], &ctx);
+	main_menu_init(player, &menus[MAIN_MENU], &ctx);
+	class_menu_init(player, &menus[CLASS_MENU], &ctx);
+	load_menu_init(player, &menus[LOAD_MENU], &ctx);
+	inventory_menu_init(player, &menus[INVENTORY_MENU], &ctx, (SDL_Color){255, 255, 255, 255});
+	loot_inventory_menu_init(world, player, &menus[LOOT_MENU], &ctx,(SDL_Color){255, 255, 255, 255});
+	spell_menu_init(player, &menus[SPELL_MENU], &ctx);
 	int running = 1;
 	SDL_Event event;
 	while(running) {
 
-
 		SDL_SetRenderDrawColor(ctx.renderer, 0, 0, 0, 255); // black background
 		SDL_RenderClear(ctx.renderer);
-
 
 		switch(player->menu_manager.current_menu) {
 			case GAME:
@@ -225,13 +247,13 @@ int main(int argc, char *argv[]) {
 				if(world->is_player_turn || actor == PLAYER_TURN_ORDER_INDEX) {
 					lantern_update_dimming(&player->lantern);
 					draw(world, player);
-					bool run = false;
-					char c;
-					while(run == false) {
-						c = getch();
-						run = manage_input(c, world, player, &player->menu_manager);
-						draw(world, player);
-					}
+					// bool run = false;
+					// char c;
+					// while(run == false) {
+						// c = getch();
+						// run = manage_input(c, world, player, &player->menu_manager);
+						// draw(world, player);
+					// }
 					traps_triggered_check_player(world, player);
 					buff_apply(world->buffs, &world->buff_count, world);
 				} else if(actor >= 0) {
@@ -244,19 +266,21 @@ int main(int argc, char *argv[]) {
 				traps_triggered_check_enemies(world, world->room[player->global_x][player->global_y]);
 				calculate_light(world, player);
 				render_game(&ctx, world, player);
+				render_game_hud(&ctx, world, player);
 				break;
 			case MAIN_MENU: { // this bracket must be here and it infuriates me
 				menu_render(&menus[MAIN_MENU], ctx.renderer);
 				SDL_RenderPresent(ctx.renderer);
 				draw_main_menu(main_menu_win, &player->menu_manager);
-				char c = getch();
-				manage_menu_input(c, &player->menu_manager, world, player);
+				// char c = getch();
+				// manage_menu_input(c, &player->menu_manager, world, player);
 				break;
 			}
 			case LOAD_MENU: {
+				menu_render(&menus[LOAD_MENU], ctx.renderer);
 				draw_load_menu(&load_menu);
-				char c = getch();
-				manage_load_menu_input(c, &load_menu, world, player, &player->menu_manager);
+				// char c = getch();
+				// manage_load_menu_input(c, &load_menu, world, player, &player->menu_manager);
 				break;
 			}
 			case SAVE_MENU: {
@@ -267,20 +291,53 @@ int main(int argc, char *argv[]) {
 			case LOG_BOOK_MENU:
 				break;
 			case CLASS_MENU:
-				display_and_manage_class_menu(main_menu_win, world, player, &player->menu_manager);
+				menu_render(&menus[CLASS_MENU], ctx.renderer);
+				SDL_RenderPresent(ctx.renderer);
+				// display_and_manage_class_menu(main_menu_win, world, player, &player->menu_manager);
 				break;
 			case NULL_MENU:
 				player->menu_manager.current_menu = MAIN_MENU;
 				DEBUG_LOG("%s", "WARNING: NULL_MENU WAS SET, RESETTING TO MAIN_MENU");
 				break;
-			case MENU_COUNT:
+			default:
 				break;
 		}
-		SDL_RenderPresent(ctx.renderer);
-		SDL_Delay(16); // ~60 FPS
+		if(player->state == PLAYER_STATE_INVENTORY || player->state == PLAYER_STATE_LOOTING) {
+			SDL_RenderClear(ctx.renderer);
+			if(player->state == PLAYER_STATE_INVENTORY) {
+				inventory_update_textures(player, &menus[INVENTORY_MENU], &ctx, (SDL_Color){255, 255, 255, 255});
+				loot_inventory_update_textures(player, &menus[LOOT_MENU], &ctx, (SDL_Color){128, 128, 128, 255});
+			} else {
+				inventory_update_textures(player, &menus[INVENTORY_MENU], &ctx, (SDL_Color){128, 128, 128, 255});
+				loot_inventory_update_textures(player, &menus[LOOT_MENU], &ctx, (SDL_Color){255, 255, 255, 255});
+			}
+			menu_update_cursor_pos(&menus[INVENTORY_MENU]);
+			menu_update_cursor_pos(&menus[LOOT_MENU]);
+
+			menu_render(&menus[INVENTORY_MENU], ctx.renderer);
+			menu_render(&menus[LOOT_MENU], ctx.renderer);
+			SDL_RenderPresent(ctx.renderer);
+		}
+		if(player->state == PLAYER_STATE_EQUIPPING_SPELL) {
+			SDL_RenderClear(ctx.renderer);
+			spell_update_textures(player, &menus[SPELL_MENU], &ctx);
+
+			menu_update_cursor_pos(&menus[SPELL_MENU]);
+
+			menu_render(&menus[SPELL_MENU], ctx.renderer);
+			SDL_RenderPresent(ctx.renderer);
+		}
+
 		while(SDL_PollEvent(&event)) {
-			menu_handle_input(menus, player->menu_manager.current_menu, event);
-			menu_update_cursor_pos(&menus[player->menu_manager.current_menu]);
+			if(player->state == PLAYER_STATE_INVENTORY) {
+				// menu_handle_input(player, menus, INVENTORY_MENU, event);
+				// inventory_update_textures(player, &menus[INVENTORY_MENU], &ctx); //TODO this is pretty inefficient
+			} else {
+				menu_handle_input(player, menus, player->menu_manager.current_menu, event);
+				menu_update_cursor_pos(&menus[player->menu_manager.current_menu]);
+			}
+			sdl_manage_input(event, world, player, menus);
+
 			switch(event.type) {
 				case SDL_QUIT:
 					end_game(world, player);
@@ -288,6 +345,8 @@ int main(int argc, char *argv[]) {
 					break;
 			}
 		}
+		SDL_RenderPresent(ctx.renderer);
+		SDL_Delay(16); // 16 = ~60 FPS
     }
     endwin();
 	SDL_DestroyRenderer(renderer);

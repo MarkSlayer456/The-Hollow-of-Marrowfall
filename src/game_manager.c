@@ -16,6 +16,7 @@
 #include "save.h"
 #include "player.h"
 #include "functions.h"
+#include "menu.h"
 
 //wmove(win, x, y);
 //waddch(win, char);
@@ -119,9 +120,212 @@ void draw(world_t *world, player_t *player) {
 	doupdate();
 }
 
+bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t *menus) {
+	room_t *room = world->room[player->global_x][player->global_y];
+	switch(event.type) {
+		case SDL_KEYDOWN:
+			switch(event.key.keysym.sym) {
+				case SDLK_w:
+					switch(player->state) {
+						case PLAYER_STATE_MOVING:
+							player_move_dir(player, world, UP);
+							break;
+						case PLAYER_STATE_ATTACKING:
+							player_attack(player, world, UP);
+							break;
+						case PLAYER_STATE_INVENTORY:
+							menu_cursor_up(&menus[INVENTORY_MENU]);
+							break;
+						case PLAYER_STATE_LOOTING:
+							menu_cursor_up(&menus[LOOT_MENU]);
+							break;
+						case PLAYER_STATE_MENU:
+							break;
+						case PLAYER_STATE_EQUIPPING_SPELL:
+							// player_cycle_popup_menu_cursor_up(player, &player->spell_equip_menu);
+							menu_cursor_up(&menus[SPELL_MENU]);
+							break;
+						default:
+							break;
+					}
+					break;
+				case SDLK_s:
+					switch(player->state) {
+						case PLAYER_STATE_MOVING:
+							player_move_dir(player, world, DOWN);
+							break;
+						case PLAYER_STATE_ATTACKING:
+							player_attack(player, world, DOWN);
+							break;
+						case PLAYER_STATE_INVENTORY:
+							menu_cursor_down(&menus[INVENTORY_MENU]);
+							break;
+						case PLAYER_STATE_LOOTING:
+							menu_cursor_down(&menus[LOOT_MENU]);
+							break;
+						case PLAYER_STATE_MENU:
+							break;
+						case PLAYER_STATE_EQUIPPING_SPELL:
+							menu_cursor_down(&menus[SPELL_MENU]);
+							// player_cycle_popup_menu_cursor_down(player, &player->spell_equip_menu);
+							break;
+						default:
+							break;
+					}
+					break;
+					case SDLK_a:
+						switch(player->state) {
+							case PLAYER_STATE_MOVING:
+								player_move_dir(player, world, LEFT);
+								break;
+							case PLAYER_STATE_ATTACKING:
+								player_attack(player, world, LEFT);
+								break;
+							case PLAYER_STATE_VIEWING:
+								break;
+							case PLAYER_STATE_INVENTORY:
+								break;
+							case PLAYER_STATE_LOOTING:
+								player_open_inventory(player);
+								break;
+							case PLAYER_STATE_MENU:
+								break;
+							default:
+								break;
+						}
+						break;
+					case SDLK_d:
+						switch(player->state) {
+							case PLAYER_STATE_MOVING:
+								player_move_dir(player, world, RIGHT);
+								break;
+							case PLAYER_STATE_ATTACKING:
+								player_attack(player, world, RIGHT);
+								break;
+							case PLAYER_STATE_INVENTORY:
+								player_open_loot(player, &menus[INVENTORY_MENU]);
+								break;
+							case PLAYER_STATE_MENU:
+								break;
+							default:
+								break;
+						}
+						break;
+					case SDLK_e:
+						switch(player->state) {
+							case PLAYER_STATE_MOVING:
+								player_enter_attack_state(player, world);
+								break;
+							case PLAYER_STATE_ATTACKING:
+								break;
+							default:
+								break;
+						}
+						break;
+					case SDLK_i:
+						switch(player->state) {
+							case PLAYER_STATE_MOVING:
+								player_open_inventory(player);
+								break;
+							case PLAYER_STATE_INVENTORY:
+								player_close_inventory(player);
+								break;
+							case PLAYER_STATE_LOOTING:
+								player_close_inventory(player);
+								break;
+							case PLAYER_STATE_EQUIPPING_SPELL:
+								player_open_inventory(player);
+								break;
+							default:
+								break;
+						}
+						break;
+					case SDLK_q:
+						switch(player->state) {
+							case PLAYER_STATE_MOVING:
+								player_cycle_attack_weapon(player);
+								break;
+							case PLAYER_STATE_VIEWING:
+								break;
+							default:
+								break;
+						}
+						break;
+					case SDLK_RETURN:
+						switch(player->state) {
+							case PLAYER_STATE_INVENTORY:
+								use_item(&menus[INVENTORY_MENU], player);
+								break;
+							case PLAYER_STATE_LOOTING:
+								player_take_loot_item(room, player, &menus[LOOT_MENU]);
+								break;
+							case PLAYER_STATE_EQUIPPING_SPELL:
+								//TODO
+								// equip_spell(player, player->spell_equip_menu.cursor_pos+1);
+								// player->state = PLAYER_STATE_INVENTORY;
+								equip_spell(player, menus[SPELL_MENU].selected+1, menus[INVENTORY_MENU].selected);
+								player->state = PLAYER_STATE_INVENTORY; //TODO this shouldn't be here
+								break;
+							case PLAYER_STATE_DEAD:
+								end_game(world, player);
+								break;
+							default:
+								break;
+						}
+						break;
+					case SDLK_b:
+						switch(player->state) {
+							case PLAYER_STATE_ATTACKING:
+								break;
+							case PLAYER_STATE_INVENTORY:
+								player_drop_item(player, world, &menus[INVENTORY_MENU]);
+								break;
+							case PLAYER_STATE_LOOTING:
+								player_close_inventory(player);
+								break;
+							case PLAYER_STATE_MENU:
+								break;
+							case PLAYER_STATE_EQUIPPING_SPELL:
+								player_open_inventory(player);
+								break;
+							default:
+								break;
+						}
+						break;
+					case SDLK_SPACE:
+						switch(player->state) {
+							case PLAYER_STATE_MOVING:
+								player_wait(player, world);
+								break;
+							case PLAYER_STATE_INVENTORY:
+								break;
+							case PLAYER_STATE_LOOTING:
+								player_close_inventory(player);
+								break;
+							default:
+								break;
+						}
+						break;
+					case SDLK_f:
+						switch(player->state) {
+							case PLAYER_STATE_MOVING:
+								if(lantern_increase_power(&player->lantern, &player->oil) == false) {
+									display_world_message(world, LANTERN_CAN_AFFORD_REFUEL);
+								}
+								break;
+							case PLAYER_STATE_LOOTING:
+								break;
+							default:
+								break;
+						}
+						break;
+				}
+		}
+	return false;
+}
+
 // TODO change this function it's not written well
 bool manage_input(char c, world_t *world, player_t *player, menu_manager_t *menu_manager) {
-	room_t *room = world->room[player->global_x][player->global_y];
 	if (c == ERR) {
 		return true;
 	}
@@ -192,28 +396,28 @@ bool manage_input(char c, world_t *world, player_t *player, menu_manager_t *menu
 	} else if(player->state == PLAYER_STATE_INVENTORY) {
 		switch(x) {
 			case KEY_W:
-				player_cycle_inv_selector_up(player);
+				// player_cycle_inv_selector_up(player);
 				break;
 			case KEY_S:
-				player_cycle_inv_selector_down(player);
+				// player_cycle_inv_selector_down(player);
 				break;
 			case KEY_D:
-				player_open_loot(player);
+				// player_open_loot(player);
 				break;
 			case CTRL_Q:
-				shutdown(world, player);
+				// shutdown(world, player);
 				break;
 			case ENTER_KEY:
-				use_item(player);
+				// use_item(player);
 				return true;
 			case KEY_I:
 				//TODO reset defaults
-				player_close_inventory(player);
+				// player_close_inventory(player);
 				return false;
 			case KEY_B:
 				//TODO reset defaults
 				// player_close_inventory(player);
-				player_drop_item(player, world);
+				// player_drop_item(player, world);
 				break;
 			default:
 				break;
@@ -224,27 +428,27 @@ bool manage_input(char c, world_t *world, player_t *player, menu_manager_t *menu
 	} else if(player->state == PLAYER_STATE_LOOTING) { 
 		switch(x) {
 			case KEY_W:
-				player_cycle_loot_selector_up(player);
+				// player_cycle_loot_selector_up(player);
 				break;
 			case KEY_S:
-				player_cycle_loot_selector_down(player);
+				// player_cycle_loot_selector_down(player);
 				break;
 			case KEY_A:
-				player_open_inventory(player);
+				// player_open_inventory(player);
 				break;
 			case CTRL_Q:
 				shutdown(world, player);
 				break;
 			case ENTER_KEY:
-				player_take_loot_item(room, player);
+				// player_take_loot_item(room, player);
 				break;
 			case KEY_I:
 				//TODO reset defaults
-				player_close_inventory(player);
+				// player_close_inventory(player);
 				break;
 			case KEY_B:
 				//TODO reset defaults
-				player_close_inventory(player);
+				// player_close_inventory(player);
 				break;
 			default:
 				break;
@@ -267,9 +471,6 @@ bool manage_input(char c, world_t *world, player_t *player, menu_manager_t *menu
 			case CTRL_Q:
 				shutdown(world, player);
 				break;
-			case ENTER_KEY:
-				player_take_loot_item(room, player);
-				break;
 			// TODO need a way to cancel attacks
 			default:
 				break;
@@ -290,8 +491,8 @@ bool manage_input(char c, world_t *world, player_t *player, menu_manager_t *menu
 				player_cycle_popup_menu_cursor_down(player, &player->spell_equip_menu);
 				break;
 			case ENTER_KEY:
-				equip_spell(player, player->spell_equip_menu.cursor_pos+1);
-				player->state = PLAYER_STATE_INVENTORY;
+				// equip_spell(player, player->spell_equip_menu.cursor_pos+1);
+				// player->state = PLAYER_STATE_INVENTORY;
 				break;
 			default:
 				break;

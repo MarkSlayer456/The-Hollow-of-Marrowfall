@@ -166,7 +166,8 @@ void calculate_door_masks(world_t *world) {
 		}
 		
 		char *buf = calloc(512, sizeof(char));
-		read(fd, buf, 512);
+		int size = read(fd, buf, 512);
+		buf[size] = '\n';
 		int y = 0;
 		char *tok = strtok(buf, "\n");
 		while(tok != NULL) {
@@ -309,7 +310,8 @@ room_t *load_room(unsigned int *seed, int x, int y, enemy_data_t *enemy_data, it
 		exit(0);
 	}
 	char *buf = calloc(512, sizeof(char));
-	read(fd, buf, 512);
+	int size = read(fd, buf, 511);
+	buf[size] = '\n';
 	int i = 0;
 
 	strcpy(room->room_file_name, file);
@@ -367,7 +369,8 @@ void load_room_floor_tiles(room_t *room) {
 		exit(0);
 	}
 	char *buf = calloc(512, sizeof(char));
-	read(fd, buf, 512);
+	int size = read(fd, buf, 511);
+	buf[size] = '\n';
 	int i = 0;
 
 	room->is_created = true;

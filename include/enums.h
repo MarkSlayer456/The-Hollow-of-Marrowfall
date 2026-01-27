@@ -33,7 +33,7 @@ enum grade {
 	F
 };
 
-enum menu {
+enum menu_id {
 	NULL_MENU = -1,
 	MAIN_MENU,
 	LOAD_MENU,
@@ -41,6 +41,9 @@ enum menu {
 	LOG_BOOK_MENU,
 	CLASS_MENU,
 	GAME,
+	INVENTORY_MENU,
+	LOOT_MENU,
+	SPELL_MENU,
 	MENU_COUNT
 };
 
@@ -114,7 +117,8 @@ typedef enum class_type {
 	SAMURAI,
 	VOID_EMBRACE,
 	VOID_KNIGHT,
-	VOID_ASSASSIN
+	VOID_ASSASSIN,
+	CLASS_COUNT
 } class_type_t;
 
 typedef enum trait {

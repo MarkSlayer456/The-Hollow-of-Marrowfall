@@ -4,6 +4,9 @@
 #include "renderer.h"
 #include "game_constants.h"
 #include "types.h"
+#include "player.h"
+
+#define MAX(a, b) a > b ? a : b
 
 sprite_t sprites[SPRITE_COUNT] = {
 	[SPRITE_BLANK] = {.dst = {0}, .src = { .x = 0, .y = 0, .w = 7, .h = 9 }},
@@ -24,7 +27,7 @@ sprite_t sprites[SPRITE_COUNT] = {
 	[SPRITE_SLIME] = { .dst = {0}, .src = { .x = 77, .y = 36, .w = 7, .h = 9 }},
 	[SPRITE_MUD_CRAWLER] = { .dst = {0}, .src = { .x = 91, .y = 27, .w = 7, .h = 9 }},
 	[SPRITE_BOG_LURKER] = { .dst = {0}, .src = { .x = 112, .y = 18, .w = 7, .h = 9 }},
-	[SPRITE_MOSS_BEAST] = { .dst = {0}, .src = { .x = 63, .y = 27, .w = 7, .h = 9 }},
+	[SPRITE_MOSS_BEAST] = { .dst = {0}, .src = { .x = 63, .y = 18, .w = 7, .h = 9 }},
 	[SPRITE_DRAGON] = { .dst = {0}, .src = { .x = 0, .y = 18, .w = 7, .h = 9 }},
 	[SPRITE_BABY_DRAGON] = { .dst = {0}, .src = { .x = 84, .y = 27, .w = 7, .h = 9 }},
 	[SPRITE_GOBLIN] = { .dst = {0}, .src = { .x = 21, .y = 18, .w = 7, .h = 9 }},
@@ -207,5 +210,180 @@ void render_game(SDL_Context *ctx, world_t *world, player_t *player) {
 	sprites[SPRITE_PLAYER].dst.w = 21;
 	sprites[SPRITE_PLAYER].dst.h = 27;
 	SDL_RenderCopy(ctx->renderer, ctx->texture, &sprites[SPRITE_PLAYER].src, &sprites[SPRITE_PLAYER].dst);
+}
+
+void render_game_hud(SDL_Context *ctx, world_t *world, player_t *player) {
+	room_t *room = world->room[player->global_x][player->global_y];
+	int start_x = 22*20+1;
+	int cur_y = 25;
+	//TODO textures shouldn't be created every frame, probably want a hud object to store
+	// textures, and only update the texture if a value changes
+
+	TTF_Font *font = TTF_OpenFont("./data/Instruction.ttf", 16);
+	if(!font) DEBUG_LOG("open font error: %s", TTF_GetError());
+	SDL_Color white = {255, 255, 255, 255};
+
+	char buf[256];
+	snprintf(buf, sizeof(buf), "Class: %s", class_get_name(player->player_class));
+	SDL_Rect class_rect = {.x = start_x, .y = cur_y};
+
+
+	SDL_Surface *class_surface = TTF_RenderText_Solid(font, buf, white);
+	if(!class_surface) DEBUG_LOG("%s", "surface error");
+	SDL_Texture *class = SDL_CreateTextureFromSurface(ctx->renderer, class_surface);
+
+	class_rect.w = class_surface->w;
+	class_rect.h = class_surface->h;
+	cur_y += class_rect.h+1;
+
+	snprintf(buf, sizeof(buf), "Health %d / %d | Mana: %d / %d | Level: %d | XP: %d / %d", player->health, player->max_health, player->mana, player->max_mana, player->level, player->xp, xp_to_level_up(player->level));
+	SDL_Rect level_rect = {.x = start_x, .y = cur_y};
+
+	SDL_Surface *level_surface = TTF_RenderText_Solid(font, buf, white);
+	if(!level_surface) DEBUG_LOG("%s", "surface error");
+	SDL_Texture *level = SDL_CreateTextureFromSurface(ctx->renderer, level_surface);
+
+	level_rect.w = level_surface->w;
+	level_rect.h = level_surface->h;
+	cur_y += level_rect.h+1;
+
+	snprintf(buf, sizeof(buf), "Str: %d | Dex: %d | Int: %d | Const: %d | Spd: %d", (int)player->strength, (int)player->dexterity, (int)player->intelligence, (int)player->constitution, (int)player->speed);
+	SDL_Rect stats_rect = {.x = start_x, .y = cur_y};
+
+	SDL_Surface *stats_surface = TTF_RenderText_Solid(font, buf, white);
+	if(!stats_surface) DEBUG_LOG("%s", "surface error");
+	SDL_Texture *stats = SDL_CreateTextureFromSurface(ctx->renderer, stats_surface);
+
+	stats_rect.w = stats_surface->w;
+	stats_rect.h = stats_surface->h;
+	cur_y += stats_rect.h+1;
+
+	if(player->equipment.attack_weapon >= 0) {
+		snprintf(buf, sizeof(buf), "Attack Weapon: %s | Oil: %d", player->inventory[player->equipment.attack_weapon].name, player->oil);
+	} else {
+		snprintf(buf, sizeof(buf), "Attack Weapon: Unarmed | Oil: %d", player->oil);
+	}
+	SDL_Rect weapon_rect = {.x = start_x, .y = cur_y};
+
+
+	SDL_Surface *weapon_surface = TTF_RenderText_Solid(font, buf, white);
+	if(!weapon_surface) DEBUG_LOG("%s", "surface error");
+	SDL_Texture *weapon = SDL_CreateTextureFromSurface(ctx->renderer, weapon_surface);
+
+	weapon_rect.w = weapon_surface->w;
+	weapon_rect.h = weapon_surface->h;
+	cur_y += weapon_rect.h+1;
+
+	memset(buf, 0, sizeof(buf));
+
+	int max_status_effects = 4;
+	strcat(buf, "Status: ");
+	int status_count = 0;
+	for(int i = 0; i < world->buff_count; i++) {
+		if(status_count == max_status_effects) break;
+		if(world->buffs[i].target_type_id == TARGET_PLAYER) {
+			if(status_count != 0) {
+				strcat(buf, ", ");
+			}
+			strcat(buf, world->buffs[i].name);
+			strcat(buf, ":");
+			char turns_left[8];
+			snprintf(turns_left, sizeof(turns_left), "%d", world->buffs[i].turns_left);
+			strcat(buf, turns_left);
+			status_count++;
+		}
+	}
+
+	SDL_Rect status_rect = {.x = start_x, .y = cur_y};
+
+	SDL_Surface *status_surface = TTF_RenderText_Solid(font, buf, white);
+	if(!status_surface) DEBUG_LOG("%s", "surface error");
+	SDL_Texture *status = SDL_CreateTextureFromSurface(ctx->renderer, status_surface);
+
+	status_rect.w = status_surface->w;
+	status_rect.h = status_surface->h;
+	cur_y += status_rect.h+1;
+
+	memset(buf, 0, sizeof(buf));
+
+	snprintf(buf, sizeof(buf), "Room Location: (%d, %d)", player->global_x, player->global_y);
+
+	SDL_Rect room_rect = {.x = start_x, .y = cur_y};
+
+	SDL_Surface *room_surface = TTF_RenderText_Solid(font, buf, white);
+	if(!room_surface) DEBUG_LOG("%s", "surface error");
+	SDL_Texture *room_texture = SDL_CreateTextureFromSurface(ctx->renderer, room_surface);
+
+	room_rect.w = room_surface->w;
+	room_rect.h = room_surface->h;
+	cur_y += room_rect.h+1;
+
+	int pos = snprintf(buf, sizeof(buf), "Turn Order: ");
+	for(int i = 0; i < world->turn_order_size; i++) {
+		if(world->turn_order[i] == PLAYER_TURN_ORDER_INDEX) {
+			pos += snprintf(buf + pos, sizeof(buf)-pos, "[%c] ", PLAYER);
+			continue;
+		}
+		enemy_t *enemy = room->enemies[world->turn_order[i]];
+		if(enemy != NULL && enemy->type != ENEMY_NONE) {
+			if(room->tiles[enemy->y][enemy->x]->has_light) {
+				pos += snprintf(buf + pos, sizeof(buf)-pos, "[%c] ", enemy->symbol);
+			} else {
+				pos += snprintf(buf + pos, sizeof(buf)-pos, "[?] ");
+			}
+		}
+	}
+
+	SDL_Rect turn_rect = {.x = start_x, .y = cur_y};
+
+	SDL_Surface *turn_surface = TTF_RenderText_Solid(font, buf, white);
+	if(!turn_surface) DEBUG_LOG("%s", "surface error");
+	SDL_Texture *turn = SDL_CreateTextureFromSurface(ctx->renderer, turn_surface);
+
+	turn_rect.w = turn_surface->w;
+	turn_rect.h = turn_surface->h;
+	cur_y += turn_rect.h+1;
+
+	int detect_radius = MAX(2, player->lantern.power);
+
+	for(int i = 0; i < room->current_enemy_count; i++) {
+		if(!room->enemies[i]) continue;
+		if(room->enemies[i]->x > player->x-detect_radius && room->enemies[i]->x < player->x+detect_radius &&
+			room->enemies[i]->y > player->y-(detect_radius) && room->enemies[i]->y < player->y+(detect_radius)) {
+			snprintf(buf, sizeof(buf), "%s : %d", room->enemies[i]->name, room->enemies[i]->health);
+
+			SDL_Rect enemy_rect = {.x = start_x, .y = cur_y};
+
+
+			SDL_Surface *enemy_surface = TTF_RenderText_Solid(font, buf, white);
+			if(!enemy_surface) DEBUG_LOG("%s", "surface error");
+			SDL_Texture *enemey_texture = SDL_CreateTextureFromSurface(ctx->renderer, enemy_surface);
+
+			enemy_rect.w = enemy_surface->w;
+			enemy_rect.h = enemy_surface->h;
+			cur_y += enemy_rect.h+1;
+
+
+			SDL_RenderCopy(ctx->renderer, enemey_texture, NULL, &enemy_rect);
+			SDL_FreeSurface(enemy_surface);
+		}
+	}
+
+
+	SDL_RenderCopy(ctx->renderer, class, NULL, &class_rect);
+	SDL_RenderCopy(ctx->renderer, level, NULL, &level_rect);
+	SDL_RenderCopy(ctx->renderer, stats, NULL, &stats_rect);
+	SDL_RenderCopy(ctx->renderer, weapon, NULL, &weapon_rect);
+	SDL_RenderCopy(ctx->renderer, status, NULL, &status_rect);
+	SDL_RenderCopy(ctx->renderer, room_texture, NULL, &room_rect);
+	SDL_RenderCopy(ctx->renderer, turn, NULL, &turn_rect);
+	SDL_FreeSurface(class_surface);
+	SDL_FreeSurface(level_surface);
+	SDL_FreeSurface(stats_surface);
+	SDL_FreeSurface(weapon_surface);
+	SDL_FreeSurface(status_surface);
+	SDL_FreeSurface(room_surface);
+	SDL_FreeSurface(turn_surface);
+	TTF_CloseFont(font);
 }
 

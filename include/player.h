@@ -59,7 +59,7 @@ void player_cycle_inv_selector_down(player_t *player);
 void player_cycle_loot_selector_up(player_t *player);
 void player_cycle_loot_selector_down(player_t *player);
 
-void player_open_loot(player_t *player);
+void player_open_loot(player_t *player, menu_t *menu);
 void player_close_loot(player_t *player);
 void player_open_inventory(player_t *player);
 void player_close_inventory(player_t *player);
@@ -68,15 +68,15 @@ void player_cycle_popup_menu_cursor_up(player_t *player, popup_menu_t *popup_men
 void player_cycle_popup_menu_cursor_down(player_t *player, popup_menu_t *popup_menu);
 
 // removes an item from the inventory list, not used to decrease item count
-void player_organize_inv(player_t *player, int loc);
+void player_organize_inv(player_t *player, menu_t *menu, int loc);
 // returns the index of where item is located in inventory, or -1 if it's not in the inventory
 int player_inv_contains(player_t *player, item_t item);
 bool player_add_to_inv(player_t *player, item_t item);
-void player_drop_item(player_t *player, world_t *world);
+void player_drop_item(player_t *player, world_t *world, menu_t *menu);
 
 void player_decrement_equipment_indexes(player_t *player, int loc);
 
-void player_take_loot_item(room_t *room, player_t *player);
+void player_take_loot_item(room_t *room, player_t *player, menu_t *menu);
 void player_get_nearby_loot(room_t *room, player_t *player);
 
 void player_clear_nearby_loot(player_t *player);

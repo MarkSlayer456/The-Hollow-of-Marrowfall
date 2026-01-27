@@ -111,8 +111,8 @@ void load_weapon_data(world_t *world) {
 	}
 	char stat_name1[32];
 	char stat_name2[32];
-	char stat1_grade;
-	char stat2_grade;
+	char stat1_grade = 'F';
+	char stat2_grade = 'F';
 	while(fgets(line, sizeof(line), fp)) {
 		line[strcspn(line, "\n")] = '\0';
 		int col = 0;

@@ -14,6 +14,7 @@
 #include "entrances.h"
 #include "pot.h"
 #include "buff.h"
+#include "menu.h"
 
 
 extern char walk_chars[WALK_CHAR_LENGTH];
@@ -578,9 +579,11 @@ void player_cycle_loot_selector_down(player_t *player) {
 	}
 }
 
-void player_open_loot(player_t *player) {
+void player_open_loot(player_t *player, menu_t *menu) {
 	if(player->nearby_loot_count == 0) return;
-	player->inventory_manager.loot_selector = 0;
+	// player->inventory_manager.loot_selector = 0;
+	menu->selected = 0;
+	menu->offset = 0;
 	player->state = PLAYER_STATE_LOOTING;
 }
 
@@ -590,7 +593,6 @@ void player_close_loot(player_t *player) {
 
 
 void player_open_inventory(player_t *player) {
-	DEBUG_LOG("%s", "open inv");
 	player->state  = PLAYER_STATE_INVENTORY;
 }
 
@@ -629,27 +631,32 @@ bool player_add_to_inv(player_t *player, item_t item) {
 	int index = player_inv_contains(player, item);
 	if(index != -1) {
 		player->inventory[index].stack += item.stack;
+		item_mark_as_changed(&player->inventory[index]);
 		return true;
 	}
 	if(player->inventory_count < INV_SIZE) {
 		player->inventory[player->inventory_count++] = item;
+		item_mark_as_changed(&player->inventory[player->inventory_count-1]);
 		return true;
 	}
 	return false;
 }
 
-void player_drop_item(player_t *player, world_t *world) {
-	item_t item = player->inventory[player->inventory_manager.inv_selector];
+void player_drop_item(player_t *player, world_t *world, menu_t *menu) {
+	int item_index = menu->selected+menu->offset;
+	item_t item = player->inventory[item_index];
 	drop_item(world->room[player->global_x][player->global_y]->tiles[player->y][player->x], world->item_data, item.id, item.stack);
-	memset(player->inventory+player->inventory_manager.inv_selector, 0, sizeof(item_t)); //TODO this is not safe
-	player_organize_inv(player, player->inventory_manager.inv_selector);
+	memset(player->inventory+item_index, 0, sizeof(item_t)); //TODO this is not safe
+	player_organize_inv(player, menu, item_index);
 	player_get_nearby_loot(world->room[player->global_x][player->global_y], player);
 }
 
-void player_take_loot_item(room_t *room, player_t *player) {
-	item_t *selected_item = player->nearby_loot[player->inventory_manager.loot_selector];
+void player_take_loot_item(room_t *room, player_t *player, menu_t *menu) {
+	int item_index = menu->selected+menu->offset;
+	item_t *selected_item = player->nearby_loot[item_index];
 	if(!selected_item) {
-		player->inventory_manager.loot_selector = 0;
+		menu->selected = 0;
+		menu->offset = 0;
 	}
 	player_add_to_inv(player, *selected_item);
 	int start_y = player->y - 1;
@@ -667,11 +674,10 @@ void player_take_loot_item(room_t *room, player_t *player) {
 		for(int x = start_x; x <= end_x; x++) {
 			for(int i = 0; i < room->tiles[y][x]->item_count; i++) {
 				item_t *item = room->tiles[y][x]->items[i];
-				DEBUG_LOG("selected_item: %p, %d ",(void *)selected_item, selected_item->id);
 				if(item == selected_item) {
 					remove_item_from_tile(room->tiles[y][x], item);
-					if(player->inventory_manager.loot_selector == player->nearby_loot_count-1) {
-						player_cycle_loot_selector_up(player);
+					if(item_index == player->nearby_loot_count-1) {
+						menu_cursor_up(menu);
 					}
 					break;
 				}
@@ -716,19 +722,20 @@ void player_clear_nearby_loot(player_t *player) {
 }
 
 // removes an item from the inventory list and reorganizes, not used to decrease item count
-void player_organize_inv(player_t *player, int loc)
+void player_organize_inv(player_t *player, menu_t *menu, int loc)
 {
+	int item_index = menu->selected+menu->offset;
 	player_decrement_equipment_indexes(player, loc);
 
 	for(int i = loc; i < INV_SIZE-1; i++) {
 		player->inventory[i] = player->inventory[i + 1];
 	}
-
-	item_t blank = {BLANK_NAME, "does nothing", BLANK, 0};
+	item_t blank = {BLANK_NAME, "does nothing", BLANK, 0, false};
 	player->inventory[INV_SIZE-1] = blank;
 	player->inventory_count--;
-	while(player->inventory[player->inventory_manager.inv_selector].id == BLANK && player->inventory_manager.inv_selector > 0) {
-		player_cycle_inv_selector_up(player);
+	while(player->inventory[item_index].id == BLANK && item_index > 0) {
+		menu_cursor_up(menu);
+		item_index = menu->selected+menu->offset;
 	}
 }
 
@@ -876,7 +883,7 @@ void player_setup(player_t *player, world_t *world) {
 	}
 	player->nearby_loot_count = 0;
 
-	item_t blank = {BLANK_NAME, "does nothing", BLANK, 0};
+	item_t blank = {BLANK_NAME, "does nothing", BLANK, 0, false};
 
 	for(int i = 0; i < INV_SIZE; i++) {
 		player->inventory[i] = blank;
@@ -940,7 +947,7 @@ void player_reset_values(player_t *player, world_t *world) {
 	player->inventory_count = 0;
 	player->nearby_loot_count = 0;
 
-	item_t blank = {BLANK_NAME, "does nothing", BLANK, 0};
+	item_t blank = {BLANK_NAME, "does nothing", BLANK, 0, false};
 
 	for(int i = 0; i < INV_SIZE; i++) {
 		player->inventory[i] = blank;

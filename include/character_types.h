@@ -17,9 +17,9 @@ typedef struct {
 
 //TODO I want to redo this
 typedef struct {
-	enum menu current_menu;
+	enum menu_id current_menu;
 	int cursor_pos;
-	enum menu dests[MAX_MENUS]; // where each button takes the user
+	enum menu_id dests[MAX_MENUS]; // where each button takes the user
 	int dests_count;
 } menu_manager_t;
 

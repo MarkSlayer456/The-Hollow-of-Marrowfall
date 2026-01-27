@@ -7,8 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "types.h"
-
-#define MAX(a, b) a > b ? a : b
+#include "functions.h"
 
 extern WINDOW *hud, *action_bar, *inventory_hud, *inventory_desc_hud;
 

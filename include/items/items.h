@@ -12,10 +12,14 @@ rarity_t get_rarity(const char *name);
 
 double get_percent_from_grade(enum grade g);
 
-// returns 1 on success and 0 on fail
-int use_item(player_t *player);
+void item_mark_as_unchanged(item_t *item);
 
-void equip_spell(player_t *player, int spell_slot);
+void item_mark_as_changed(item_t *item);
+
+// returns 1 on success and 0 on fail
+int use_item(menu_t *menu, player_t *player);
+
+void equip_spell(player_t *player, int spell_slot, int inv_index);
 
 int handle_armor_change(player_t *player, int new_armor);
 int handle_weapon_change(player_t *player, int new_weapon);
@@ -31,7 +35,7 @@ int use_health_potion(player_t *player);
 int use_apple(player_t *player);
 int use_chicken_dinner(player_t *player);
 
-void remove_item(player_t *player);
+void remove_item(menu_t *menu, player_t *player);
 
 void item_spawn(item_ids_t id, room_t *room, tile_t *tile, item_data_t *item_data);
 item_ids_t item_generate_type(unsigned int *seed, item_data_t *item_data, biome_t biome);

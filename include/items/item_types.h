@@ -78,6 +78,7 @@ typedef struct item {
 	char desc[MAX_ITEM_DESC_LEN];
 	item_ids_t id;
 	int stack;
+	bool has_changed;
 	value_type_t value_type;
 	union {
 		armor_stats_t armor;

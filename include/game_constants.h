@@ -413,6 +413,8 @@
 #define DEATH_MENU_WIDTH			31
 #define DEATH_MENU_HEIGHT			7
 
+#define MAX_MENU_ITEMS_DISPLAYED				8
+
 #define STARTING_BUFF_SIZE			   8
 #define BUFF_NAME_MAX_LEN				4
 #define BUFF_NULL_NAME					"NIL"
