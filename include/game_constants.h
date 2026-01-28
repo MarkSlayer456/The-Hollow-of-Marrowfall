@@ -5,6 +5,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#define GAME_VERSION							"0.6.8"
+
 #define MESSAGE_IS_PLAYERS_TURN					"It is your turn!"
 
 #define MAX_TYPE_MAP_NAME_LENGTH				128
@@ -47,7 +49,10 @@
 #define DEFENSE_SCALING_CONSTANT				50 // high defense less powerful, lower more powerful
 
 #define PLAYER_TURN_ORDER_INDEX					-1
+#define WORLD_TURN_ORDER_INDEX					-2
 #define INVALID_ACTOR_INDEX						999999999
+#define WORLD_SPEED								5
+#define TIME_TO_ACT								50
 
 #define DOOR_BLOCKED_MESSAGE					"This door won't seem to budge!"
 #define ATTACK_DIRECTION_MESSAGE				"Which direction?"
@@ -95,9 +100,6 @@
 #define ENEMY_CHAR      'E' // used when finding enemies on the map
 
 #define ACTION_BAR_SELECTOR_COUNT				2
-
-#define TIME_TO_ACT								50
-
 
 #define MAX_ITEM_NAME_LENGTH					32
 #define MAX_ITEM_DESC_LEN						256

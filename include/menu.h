@@ -6,8 +6,6 @@
 
 void main_menu_init(player_t *player, menu_t *menu, SDL_Context *ctx);
 
-void menu_handle_input(player_t *player, menu_t menu[MENU_COUNT], enum menu_id menu_id,  SDL_Event event);
-
 void class_menu_init(player_t *player, menu_t *menu, SDL_Context *ctx);
 
 void load_menu_init(player_t *player, menu_t *menu, SDL_Context *ctx);

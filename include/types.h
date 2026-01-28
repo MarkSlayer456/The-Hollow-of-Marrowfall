@@ -2,7 +2,6 @@
 
 #define TYPES_H_
 #include <stdbool.h>
-#include <ncurses.h>
 #include "game_constants.h"
 #include "items/item_types.h"
 #include "character_types.h"
@@ -53,11 +52,17 @@ enum sprite_enum {
 	SPRITE_COUNT
 };
 
+typedef struct {
+	SDL_Window *window;
+	SDL_Renderer *renderer;
+	SDL_Texture *texture;
+} SDL_Context;
+
 /*
  * holds all world information, aside from the player
  */
 typedef struct world {
-	WINDOW *win;
+	SDL_Context ctx;
 	room_t *room[WORLD_HEIGHT][WORLD_WIDTH];
 	unsigned int seed;
 	enemy_data_t *enemy_data;
@@ -74,20 +79,13 @@ typedef struct world {
 	int room_template_count;
 	room_template_t room_templates[128];
 	bool is_player_turn; // this is used to save the player's turn, mostly for the save funcationality to work
+	int action_points;
+	bool turn_has_passed;
 	uint8_t buff_size;
 	uint8_t buff_count;
 	buff_t *buffs;
 	drop_table_t pot_drop_table;
 } world_t;
-
-typedef struct {
-	WINDOW *win;
-	char (*filename)[SAVE_FILE_MAX_LEN];
-	uint8_t filename_count; // how many save files
-	uint8_t filename_size; // current size of filename
-	uint8_t cursor_offset;
-	uint8_t cursor_pos;
-} load_menu_t;
 
 typedef struct {
 	SDL_Texture *texture;
@@ -119,17 +117,11 @@ typedef struct {
 	} data_type;
 } menu_data_item_t;
 
-typedef struct {
-	SDL_Window *window;
-	SDL_Renderer *renderer;
-	SDL_Texture *texture;
-} SDL_Context;
-
 typedef struct menu menu_t;
 
 struct menu {
 	menu_data_item_t *data;
-	enum menu_id *dests;
+	player_state_t *dests;
 	void (*operation)(void *ctx1, void *ctx2, void *ctx3);
 	void *operation_ctx1;
 	void *operation_ctx2;
@@ -141,6 +133,7 @@ struct menu {
 	int display_max; // max number of items displayed before scrolling
 	int offset;
 	int offset_max;
+	bool needs_redraw;
 };
 
 #endif

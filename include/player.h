@@ -59,9 +59,9 @@ void player_cycle_inv_selector_down(player_t *player);
 void player_cycle_loot_selector_up(player_t *player);
 void player_cycle_loot_selector_down(player_t *player);
 
-void player_open_loot(player_t *player, menu_t *menu);
+void player_open_loot(player_t *player, menu_t *menus);
 void player_close_loot(player_t *player);
-void player_open_inventory(player_t *player);
+void player_open_inventory(player_t *player, menu_t *menus);
 void player_close_inventory(player_t *player);
 
 void player_cycle_popup_menu_cursor_up(player_t *player, popup_menu_t *popup_menu);
@@ -76,7 +76,7 @@ void player_drop_item(player_t *player, world_t *world, menu_t *menu);
 
 void player_decrement_equipment_indexes(player_t *player, int loc);
 
-void player_take_loot_item(room_t *room, player_t *player, menu_t *menu);
+void player_take_loot_item(room_t *room, player_t *player, menu_t *menus);
 void player_get_nearby_loot(room_t *room, player_t *player);
 
 void player_clear_nearby_loot(player_t *player);

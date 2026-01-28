@@ -42,83 +42,82 @@ const int MENU_CLASS_LIST[] = {
 
 const int MENU_CLASS_LIST_SIZE = sizeof(MENU_CLASS_LIST) / sizeof(MENU_CLASS_LIST[0]);
 
-void draw(world_t *world, player_t *player) {
-	werase(world->win);
-	werase(hud);
-	werase(action_bar);
-	werase(inventory_hud);
-	werase(inventory_desc_hud);
-	// draw stuff...
-	if(player->state == PLAYER_STATE_EQUIPPING_SPELL) {
-		display_spell_equip_menu(player, player->spell_equip_menu);
-		return;
-	}
-	if(player->state == PLAYER_STATE_DEAD) {
-		display_death_menu(player, player->death_menu);
-		return;
-	}
-	if(player->state == PLAYER_STATE_INVENTORY || player->state == PLAYER_STATE_LOOTING) {
-		display_inventory_hud(world, player);
-		display_inventory_desc_hud(world, player);
-		wnoutrefresh(inventory_hud);
-		wnoutrefresh(inventory_desc_hud);
-	} else {
-		// TODO add just a hud_update() function so you don't have to call a bunch of different functions
-		room_t *room = world->room[player->global_x][player->global_y];
-		hud_update_player_health(player, world->buffs, world->buff_count);
-		hud_update_nearby_enemies(world, player);
-		// hud_update_menus(player, room);
-		hud_update_messages(world, player);
-		for(int i = 0; i < ROOM_HEIGHT; i++) {
-			for(int j = 0; j < ROOM_WIDTH; j++) {
-				if(room->tiles[i][j]->has_light == false) {
-					continue;
-				}
-				int enemyIsThere = 0;
-				int playerIsThere = 0;
-				wmove(world->win, i, j);
-				for(int u = 0; u < room->current_enemy_count; u++) {
-					if(room->enemies[u] == NULL) continue;
-					if(room->enemies[u]->x == j && room->enemies[u]->y == i) {
-						waddch(world->win, room->enemies[u]->symbol);
-						enemyIsThere = 1;
-						break;
-					}
-				}
-				for(int u = 0; u < room->current_pot_count; u++) {
-					if(room->pots[u].broken) continue;
-					if(room->pots[u].x == j && room->pots[u].y == i) {
-						waddch(world->win, POT);
-						break;
-					}
-				}
-				
-				if(player->x == j && player->y == i) {
-					waddch(world->win, PLAYER);
-					playerIsThere = 1;
-				}
-				
-				for(int k = 0; k < MAX_ITEMS_PER_TILE; k++) {
-					if(room->tiles[i][j]->items[k] != NULL && room->tiles[i][j]->items[k]->stack > 0) {
-						waddch(world->win, ITEM_SYMBOL);
-						enemyIsThere = 1; //TODO
-						break;
-					}
-				}
-				
-				if(!playerIsThere && !enemyIsThere) {
-					waddch(world->win, room->tiles[i][j]->floor);
-				}
-			}
-		}
-		wnoutrefresh(inventory_hud); // this has to be first
-		wnoutrefresh(inventory_desc_hud); // this has to be first
-		wnoutrefresh(world->win);
-		wnoutrefresh(hud);
-		wnoutrefresh(action_bar);
-	}
-	doupdate();
-}
+// void draw(world_t *world, player_t *player) {
+// 	werase(world->win);
+// 	werase(hud);
+// 	werase(action_bar);
+// 	werase(inventory_hud);
+// 	werase(inventory_desc_hud);
+// 	// draw stuff...
+// 	if(player->state == PLAYER_STATE_EQUIPPING_SPELL) {
+// 		return;
+// 	}
+// 	if(player->state == PLAYER_STATE_DEAD) {
+// 		display_death_menu(player, player->death_menu);
+// 		return;
+// 	}
+// 	if(player->state == PLAYER_STATE_INVENTORY || player->state == PLAYER_STATE_LOOTING) {
+// 		display_inventory_hud(world, player);
+// 		display_inventory_desc_hud(world, player);
+// 		wnoutrefresh(inventory_hud);
+// 		wnoutrefresh(inventory_desc_hud);
+// 	} else {
+// 		// TODO add just a hud_update() function so you don't have to call a bunch of different functions
+// 		room_t *room = world->room[player->global_x][player->global_y];
+// 		hud_update_player_health(player, world->buffs, world->buff_count);
+// 		hud_update_nearby_enemies(world, player);
+// 		// hud_update_menus(player, room);
+// 		hud_update_messages(world, player);
+// 		for(int i = 0; i < ROOM_HEIGHT; i++) {
+// 			for(int j = 0; j < ROOM_WIDTH; j++) {
+// 				if(room->tiles[i][j]->has_light == false) {
+// 					continue;
+// 				}
+// 				int enemyIsThere = 0;
+// 				int playerIsThere = 0;
+// 				wmove(world->win, i, j);
+// 				for(int u = 0; u < room->current_enemy_count; u++) {
+// 					if(room->enemies[u] == NULL) continue;
+// 					if(room->enemies[u]->x == j && room->enemies[u]->y == i) {
+// 						waddch(world->win, room->enemies[u]->symbol);
+// 						enemyIsThere = 1;
+// 						break;
+// 					}
+// 				}
+// 				for(int u = 0; u < room->current_pot_count; u++) {
+// 					if(room->pots[u].broken) continue;
+// 					if(room->pots[u].x == j && room->pots[u].y == i) {
+// 						waddch(world->win, POT);
+// 						break;
+// 					}
+// 				}
+//
+// 				if(player->x == j && player->y == i) {
+// 					waddch(world->win, PLAYER);
+// 					playerIsThere = 1;
+// 				}
+//
+// 				for(int k = 0; k < MAX_ITEMS_PER_TILE; k++) {
+// 					if(room->tiles[i][j]->items[k] != NULL && room->tiles[i][j]->items[k]->stack > 0) {
+// 						waddch(world->win, ITEM_SYMBOL);
+// 						enemyIsThere = 1; //TODO
+// 						break;
+// 					}
+// 				}
+//
+// 				if(!playerIsThere && !enemyIsThere) {
+// 					waddch(world->win, room->tiles[i][j]->floor);
+// 				}
+// 			}
+// 		}
+// 		wnoutrefresh(inventory_hud); // this has to be first
+// 		wnoutrefresh(inventory_desc_hud); // this has to be first
+// 		wnoutrefresh(world->win);
+// 		wnoutrefresh(hud);
+// 		wnoutrefresh(action_bar);
+// 	}
+// 	doupdate();
+// }
 
 bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t *menus) {
 	room_t *room = world->room[player->global_x][player->global_y];
@@ -132,6 +131,15 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 							break;
 						case PLAYER_STATE_ATTACKING:
 							player_attack(player, world, UP);
+							break;
+						case PLAYER_STATE_MAIN_MENU:
+							menu_cursor_up(&menus[MAIN_MENU]);
+							break;
+						case PLAYER_STATE_CLASS_MENU:
+							menu_cursor_up(&menus[CLASS_MENU]);
+							break;
+						case PLAYER_STATE_LOAD_MENU:
+							menu_cursor_up(&menus[LOAD_MENU]);
 							break;
 						case PLAYER_STATE_INVENTORY:
 							menu_cursor_up(&menus[INVENTORY_MENU]);
@@ -156,6 +164,15 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 							break;
 						case PLAYER_STATE_ATTACKING:
 							player_attack(player, world, DOWN);
+							break;
+						case PLAYER_STATE_MAIN_MENU:
+							menu_cursor_down(&menus[MAIN_MENU]);
+							break;
+						case PLAYER_STATE_CLASS_MENU:
+							menu_cursor_down(&menus[CLASS_MENU]);
+							break;
+						case PLAYER_STATE_LOAD_MENU:
+							menu_cursor_down(&menus[LOAD_MENU]);
 							break;
 						case PLAYER_STATE_INVENTORY:
 							menu_cursor_down(&menus[INVENTORY_MENU]);
@@ -186,7 +203,7 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 							case PLAYER_STATE_INVENTORY:
 								break;
 							case PLAYER_STATE_LOOTING:
-								player_open_inventory(player);
+								player_open_inventory(player, menus);
 								break;
 							case PLAYER_STATE_MENU:
 								break;
@@ -203,7 +220,7 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 								player_attack(player, world, RIGHT);
 								break;
 							case PLAYER_STATE_INVENTORY:
-								player_open_loot(player, &menus[INVENTORY_MENU]);
+								player_open_loot(player, menus);
 								break;
 							case PLAYER_STATE_MENU:
 								break;
@@ -225,7 +242,7 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 					case SDLK_i:
 						switch(player->state) {
 							case PLAYER_STATE_MOVING:
-								player_open_inventory(player);
+								player_open_inventory(player, menus);
 								break;
 							case PLAYER_STATE_INVENTORY:
 								player_close_inventory(player);
@@ -234,7 +251,7 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 								player_close_inventory(player);
 								break;
 							case PLAYER_STATE_EQUIPPING_SPELL:
-								player_open_inventory(player);
+								player_open_inventory(player, menus);
 								break;
 							default:
 								break;
@@ -255,9 +272,12 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 						switch(player->state) {
 							case PLAYER_STATE_INVENTORY:
 								use_item(&menus[INVENTORY_MENU], player);
+								menus[INVENTORY_MENU].needs_redraw = true;
 								break;
 							case PLAYER_STATE_LOOTING:
-								player_take_loot_item(room, player, &menus[LOOT_MENU]);
+								player_take_loot_item(room, player, menus);
+								menus[LOOT_MENU].needs_redraw = true;
+								menus[INVENTORY_MENU].needs_redraw = true;
 								break;
 							case PLAYER_STATE_EQUIPPING_SPELL:
 								//TODO
@@ -265,9 +285,19 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 								// player->state = PLAYER_STATE_INVENTORY;
 								equip_spell(player, menus[SPELL_MENU].selected+1, menus[INVENTORY_MENU].selected);
 								player->state = PLAYER_STATE_INVENTORY; //TODO this shouldn't be here
+								menus[SPELL_MENU].needs_redraw = true;
 								break;
 							case PLAYER_STATE_DEAD:
 								end_game(world, player);
+								break;
+							case PLAYER_STATE_MAIN_MENU:
+								menus[MAIN_MENU].operation(menus[MAIN_MENU].operation_ctx1, menus[MAIN_MENU].operation_ctx2, menus[MAIN_MENU].operation_ctx3);
+								break;
+							case PLAYER_STATE_LOAD_MENU:
+								menus[LOAD_MENU].operation(menus[LOAD_MENU].operation_ctx1, menus[LOAD_MENU].operation_ctx2, menus[LOAD_MENU].operation_ctx3);
+								break;
+							case PLAYER_STATE_CLASS_MENU:
+								menus[CLASS_MENU].operation(menus[CLASS_MENU].operation_ctx1, menus[CLASS_MENU].operation_ctx2, menus[CLASS_MENU].operation_ctx3);
 								break;
 							default:
 								break;
@@ -279,6 +309,7 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 								break;
 							case PLAYER_STATE_INVENTORY:
 								player_drop_item(player, world, &menus[INVENTORY_MENU]);
+								menus[LOOT_MENU].needs_redraw = true;
 								break;
 							case PLAYER_STATE_LOOTING:
 								player_close_inventory(player);
@@ -286,7 +317,7 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 							case PLAYER_STATE_MENU:
 								break;
 							case PLAYER_STATE_EQUIPPING_SPELL:
-								player_open_inventory(player);
+								player_open_inventory(player, menus);
 								break;
 							default:
 								break;
@@ -320,197 +351,12 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 						}
 						break;
 				}
+			return true;
+		case SDL_QUIT:
+			// end_game(world, player);
+			// running = 0;
+			break;
 		}
-	return false;
-}
-
-// TODO change this function it's not written well
-bool manage_input(char c, world_t *world, player_t *player, menu_manager_t *menu_manager) {
-	if (c == ERR) {
-		return true;
-	}
-	int x = c;
-	if(c == 27) {
-		c = getch();
-		if(c == 91) { // is not a ctrl arrow key
-			c = getch();	
-			x = ARROW_KEY_MOD + c;
-		}
-	}
-	if(player->state == PLAYER_STATE_MOVING) {
-		switch(x) {
-			case KEY_A:
-				player_move_dir(player, world, LEFT);
-				break;
-			case KEY_D:
-				player_move_dir(player, world, RIGHT);
-				break;
-			case KEY_W:
-				player_move_dir(player, world, UP);
-				break;
-			case KEY_S:
-				player_move_dir(player, world, DOWN);
-				break;
-			case UP_ARROW:
-				player_attack(player, world, UP);
-				break;
-			case DOWN_ARROW:
-				player_attack(player, world, DOWN);
-				break;
-			case LEFT_ARROW:
-				player_attack(player, world, LEFT);
-				break;
-			case RIGHT_ARROW:
-				player_attack(player, world, RIGHT);
-				break;
-			case KEY_SPACE:
-				player_wait(player, world);
-				break;
-			case KEY_E:
-				player_enter_attack_state(player, world);
-				return false;
-			case KEY_Q:
-				player_cycle_attack_weapon(player);
-				return false;
-			case CTRL_S:
-				menu_manager->current_menu = SAVE_MENU;
-				world->is_player_turn = true;
-				return true;
-			case KEY_F_MINE:
-				if(lantern_increase_power(&player->lantern, &player->oil) == false) {
-					display_world_message(world, LANTERN_CAN_AFFORD_REFUEL);
-				}
-				break;
-			case CTRL_Q:
-				shutdown(world, player);
-				break;
-			case KEY_I:
-				player_open_inventory(player);
-				return false;
-				break;
-			default:
-				break;
-		}
-		world->is_player_turn = false;
-		return true;
-	} else if(player->state == PLAYER_STATE_INVENTORY) {
-		switch(x) {
-			case KEY_W:
-				// player_cycle_inv_selector_up(player);
-				break;
-			case KEY_S:
-				// player_cycle_inv_selector_down(player);
-				break;
-			case KEY_D:
-				// player_open_loot(player);
-				break;
-			case CTRL_Q:
-				// shutdown(world, player);
-				break;
-			case ENTER_KEY:
-				// use_item(player);
-				return true;
-			case KEY_I:
-				//TODO reset defaults
-				// player_close_inventory(player);
-				return false;
-			case KEY_B:
-				//TODO reset defaults
-				// player_close_inventory(player);
-				// player_drop_item(player, world);
-				break;
-			default:
-				break;
-		}
-		world->is_player_turn = false;
-		// hud_update_action_bar(player, world->room[player->global_x][player->global_y]);
-		return false;
-	} else if(player->state == PLAYER_STATE_LOOTING) { 
-		switch(x) {
-			case KEY_W:
-				// player_cycle_loot_selector_up(player);
-				break;
-			case KEY_S:
-				// player_cycle_loot_selector_down(player);
-				break;
-			case KEY_A:
-				// player_open_inventory(player);
-				break;
-			case CTRL_Q:
-				shutdown(world, player);
-				break;
-			case ENTER_KEY:
-				// player_take_loot_item(room, player);
-				break;
-			case KEY_I:
-				//TODO reset defaults
-				// player_close_inventory(player);
-				break;
-			case KEY_B:
-				//TODO reset defaults
-				// player_close_inventory(player);
-				break;
-			default:
-				break;
-		}
-		return false;
-	} else if(player->state == PLAYER_STATE_ATTACKING) {
-		switch(x) {
-			case KEY_W:
-				player_attack(player, world, UP);
-				return true;
-			case KEY_S:
-				player_attack(player, world, DOWN);
-				return true;
-			case KEY_D:
-				player_attack(player, world, RIGHT);
-				return true;
-			case KEY_A:
-				player_attack(player, world, LEFT);
-				return true;
-			case CTRL_Q:
-				shutdown(world, player);
-				break;
-			// TODO need a way to cancel attacks
-			default:
-				break;
-		}
-		return false;
-	} else if(player->state == PLAYER_STATE_EQUIPPING_SPELL) {
-		switch(x) {
-			case CTRL_Q:
-				shutdown(world, player);
-				break;
-			case KEY_B:
-				player->state = PLAYER_STATE_INVENTORY; //TODO
-				break;
-			case KEY_W:
-				player_cycle_popup_menu_cursor_up(player, &player->spell_equip_menu);
-				break;
-			case KEY_S:
-				player_cycle_popup_menu_cursor_down(player, &player->spell_equip_menu);
-				break;
-			case ENTER_KEY:
-				// equip_spell(player, player->spell_equip_menu.cursor_pos+1);
-				// player->state = PLAYER_STATE_INVENTORY;
-				break;
-			default:
-				break;
-		}
-		return false;
-	} else if(player->state == PLAYER_STATE_DEAD) {
-		switch(x) {
-			case CTRL_Q:
-				shutdown(world, player);
-				break;
-			case ENTER_KEY:
-				end_game(world, player);
-				break;
-			default:
-				break;
-		}
-		return true;
-	}
 	return false;
 }
 
@@ -616,10 +462,20 @@ int pick_next_actor(world_t *world, player_t *player) {
 	int idx = INVALID_ACTOR_INDEX;
 	int fastest = 0;
 	while(true) {
+		world->action_points += WORLD_SPEED;
+		if(world->action_points >= TIME_TO_ACT) {
+			if(fastest < world->action_points) {
+				fastest = world->action_points;
+				idx = WORLD_TURN_ORDER_INDEX;
+			}
+		}
+
 		player->action_points += MAX(player->speed, 1);
 		if(player->action_points >= TIME_TO_ACT) {
-			fastest = player->action_points;
-			idx = PLAYER_TURN_ORDER_INDEX;
+			if(fastest < player->action_points) {
+				fastest = player->action_points;
+				idx = PLAYER_TURN_ORDER_INDEX;
+			}
 		}
 		
 		for(int i = 0; i < world->room[player->global_x][player->global_y]->current_enemy_count; i++) {
@@ -638,6 +494,8 @@ int pick_next_actor(world_t *world, player_t *player) {
 		
 		if(idx == PLAYER_TURN_ORDER_INDEX) {
 			player->action_points -= TIME_TO_ACT;
+		} else if(idx == WORLD_TURN_ORDER_INDEX) {
+			world->action_points -= TIME_TO_ACT;
 		} else {
 			enemy_t *enemy = world->room[player->global_x][player->global_y]->enemies[idx];
 			enemy->action_points -= TIME_TO_ACT;
@@ -650,6 +508,7 @@ int pick_next_actor(world_t *world, player_t *player) {
 void generate_turn_order_display(world_t *world, player_t *player) {
 	int projected_enemy_ap[MAX_ENEMIES_PER_LEVEL];
 	int player_projected_ap = player->action_points;
+	int world_projected_ap = world->action_points;
 	world->turn_order_size = 0;
 	room_t *room = world->room[player->global_x][player->global_y];
 	for(int i = 0; i < room->current_enemy_count; i++) {
@@ -660,10 +519,20 @@ void generate_turn_order_display(world_t *world, player_t *player) {
 	while(world->turn_order_size < MAX_ENEMIES_PER_LEVEL) {
 		int largest = 0;
 		int idx = INVALID_ACTOR_INDEX;
+		world_projected_ap += WORLD_SPEED;
+		if(world_projected_ap >= TIME_TO_ACT && world_projected_ap > largest) {
+			if(largest < world->action_points) {
+				largest = world_projected_ap;
+				idx = WORLD_TURN_ORDER_INDEX;
+			}
+		}
+
 		player_projected_ap += MAX(player->speed, 1);
 		if(player_projected_ap >= TIME_TO_ACT && player_projected_ap > largest) {
-			largest = player_projected_ap;
-			idx = PLAYER_TURN_ORDER_INDEX;
+			if(largest < player->action_points) {
+				largest = player_projected_ap;
+				idx = PLAYER_TURN_ORDER_INDEX;
+			}
 		}
 		
 		room_t *room = world->room[player->global_x][player->global_y];
@@ -681,6 +550,8 @@ void generate_turn_order_display(world_t *world, player_t *player) {
 			continue;
 		} else if(idx == PLAYER_TURN_ORDER_INDEX) {
 			player_projected_ap -= TIME_TO_ACT;
+		} else if(idx == WORLD_TURN_ORDER_INDEX) {
+			world_projected_ap -= TIME_TO_ACT;
 		} else {
 			projected_enemy_ap[idx] -= TIME_TO_ACT;
 		}
@@ -690,6 +561,7 @@ void generate_turn_order_display(world_t *world, player_t *player) {
 
 void turn_order_enter_new_room(world_t *world, player_t *player) {
 	player->action_points = 0;
+	world->action_points = 0;
 	assert(world->room[player->global_x][player->global_y]->is_created);
 	for(int i = 0; i < world->room[player->global_x][player->global_y]->current_enemy_count; i++) {
 		if(world->room[player->global_x][player->global_y]->enemies[i] == NULL) continue;
@@ -697,191 +569,7 @@ void turn_order_enter_new_room(world_t *world, player_t *player) {
 	}
 }
 
-void draw_main_menu(WINDOW *main_menu, menu_manager_t *menu_manager) {
-	werase(main_menu);
-	
-	menu_manager->dests_count = 0;
-
-	char display_str[16] = "";
-
-	int y_pos = 0;
-	wmove(main_menu, y_pos++, 0);
-	waddstr(main_menu, GAME_TITLE);
-	wmove(main_menu, y_pos++, 0);
-	waddstr(main_menu, MENU_DIVIDE_LINE);
-	int dest_pos = 0;
-	menu_manager->dests[dest_pos++] = GAME;
-	menu_manager->dests_count++;
-	char new_game[9] = "New Game";
-	wmove(main_menu, y_pos++, 0);
-	if(menu_manager->dests[menu_manager->cursor_pos] == GAME) {
-		snprintf(display_str, sizeof(display_str), ">>%s", new_game);
-		waddstr(main_menu, display_str);
-	} else {
-		waddstr(main_menu, new_game);
-	}
-	menu_manager->dests[dest_pos++] = LOAD_MENU;
-	menu_manager->dests_count++;
-	char load_game[11] = "Load Game";
-	wmove(main_menu, y_pos++, 0);
-	if(menu_manager->dests[menu_manager->cursor_pos] == LOAD_MENU) {
-		snprintf(display_str, sizeof(display_str), ">>%s", load_game);
-		waddstr(main_menu, display_str);
-	} else {
-		waddstr(main_menu, load_game);
-	}
-	menu_manager->dests[dest_pos++] = LOG_BOOK_MENU;
-	menu_manager->dests_count++;
-	char log_book[9] = "Log Book";
-	wmove(main_menu, y_pos++, 0);
-	if(menu_manager->dests[menu_manager->cursor_pos] == LOG_BOOK_MENU) {
-		snprintf(display_str, sizeof(display_str), ">>%s", log_book);
-		waddstr(main_menu, display_str);
-	} else {
-		waddstr(main_menu, log_book);
-	}
-	
-	wnoutrefresh(main_menu);
-	doupdate();
-}
-
-void generate_load_menu_list(load_menu_t *load_menu) {
-	DIR *dir = opendir(get_save_path());
-	
-	if(!dir) {
-		perror("opendir failed");
-		return;
-	}
-	struct dirent *entry;
-	while((entry = readdir(dir)) != NULL) {
-		if(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-			continue;
-		}
-		if(load_menu->filename_count >= load_menu->filename_size) {
-			load_menu->filename_size *= 2;
-			load_menu->filename = realloc(load_menu->filename, load_menu->filename_size * sizeof(char[SAVE_FILE_MAX_LEN]));
-		}
-		strcpy(load_menu->filename[load_menu->filename_count], entry->d_name);
-		load_menu->filename_count++;
-	}
-}
-
-void draw_load_menu(const load_menu_t *load_menu) {
-	werase(load_menu->win);
-	int y_pos = 0;
-	wmove(load_menu->win, y_pos++, 0);
-	waddstr(load_menu->win, LOAD_MENU_TITLE);
-	wmove(load_menu->win, y_pos++, 0);
-	waddstr(load_menu->win, MENU_DIVIDE_LINE);
-	char display_str[256];
-	for(int i = load_menu->cursor_offset; i < (LOAD_MENU_VISIBLE_ENTRIES + load_menu->cursor_offset); i++) {
-		if(i >= load_menu->filename_count) break;
-		wmove(load_menu->win, y_pos, 0);
-		if(i == load_menu->cursor_pos) {
-			snprintf(display_str, sizeof(display_str), ">>%s", load_menu->filename[i]);
-		} else {
-			snprintf(display_str, sizeof(display_str), "%s", load_menu->filename[i]);
-		}
-		waddstr(load_menu->win, display_str);
-		y_pos++;
-	}
-	wnoutrefresh(load_menu->win);
-	doupdate();
-}
-
-void manage_load_menu_input(char c, load_menu_t *load_menu, world_t *world, player_t *player, menu_manager_t *menu_manager) {
-	if(c == ERR) {
-		return;
-	}
-	int x = c;
-	if(c == 27) {
-		c = getch();
-		if(c == 91) { // is not a ctrl arrow key
-			c = getch();	
-			x = ARROW_KEY_MOD + c;
-		}
-	}
-	switch(x) {
-		case LEFT_ARROW:
-			break;
-		case RIGHT_ARROW:
-			break;
-		case KEY_W:
-		case UP_ARROW:
-			if(load_menu->cursor_pos > 0) {
-				if(load_menu->cursor_pos - load_menu->cursor_offset == 0) {
-					load_menu->cursor_offset--;
-				}
-				load_menu->cursor_pos--;
-			}
-			break;
-		case KEY_S:
-		case DOWN_ARROW: {
-				if(load_menu->cursor_pos + 1 < load_menu->filename_count) {
-					if(load_menu->cursor_pos - load_menu->cursor_offset >= LOAD_MENU_VISIBLE_ENTRIES-1) {
-						load_menu->cursor_offset++;
-					}
-					load_menu->cursor_pos++;
-				}
-				break;
-			}
-		case CTRL_Q:
-			shutdown(world, player);
-			break;
-		case ENTER_KEY:
-			load_game(world, player, load_menu->filename[load_menu->cursor_pos]);
-			menu_manager->current_menu = GAME;
-			break;
-	}
-}
-
-void manage_menu_input(char c, menu_manager_t *menu_manager, world_t *world, player_t *player) {
-	if(c == ERR) {
-		return;
-	}
-	int x = c;
-	if(c == 27) {
-		c = getch();
-		if(c == 91) { // is not a ctrl arrow key
-			c = getch();	
-			x = ARROW_KEY_MOD + c;
-		}
-	}
-	switch(x) {
-		case LEFT_ARROW:
-			break;
-		case RIGHT_ARROW:
-			break;
-		case UP_ARROW:
-		case KEY_W:
-			if(menu_manager->cursor_pos - 1 < 0) { 
-				menu_manager->cursor_pos = menu_manager->dests_count-1;
-			} else {
-				menu_manager->cursor_pos--;
-			}
-			break;
-		case DOWN_ARROW:
-		case KEY_S:
-			if(menu_manager->cursor_pos + 1 < menu_manager->dests_count) { 
-				menu_manager->cursor_pos++;
-			} else {
-				menu_manager->cursor_pos = 0;
-			}
-			break;
-		case CTRL_Q:
-			shutdown(world, player);
-			break;
-		case ENTER_KEY:
-			// TODO probablly want a switch statement here
-			if(menu_manager->dests[menu_manager->cursor_pos] == GAME) {
-				menu_manager->current_menu = CLASS_MENU;
-			} else if(menu_manager->dests[menu_manager->cursor_pos] == LOAD_MENU) {
-				menu_manager->current_menu = LOAD_MENU;
-			}
-			break;
-	}
-}
-
+/* TODO keeping this for reference when creating sdl version
 void display_and_manage_save_menu(WINDOW *win, char *buf, int max_len, world_t *world, player_t *player, menu_manager_t *menu_manager) {
 	werase(win);
 	memset(buf, 0, max_len);
@@ -910,137 +598,7 @@ void display_and_manage_save_menu(WINDOW *win, char *buf, int max_len, world_t *
 		wnoutrefresh(win);
 		doupdate();
 	}
-}
-
-void display_and_manage_class_menu(WINDOW *win, world_t *world, player_t *player, menu_manager_t *menu_manager) {
-	werase(win);
-	int ch;
-	int y = 1;
-	int x = 0;
-	waddstr(win, MENU_CLASS_PROMPT);
-	wmove(win, y, x);
-	waddstr(win, MENU_DIVIDE_LINE);
-	touchwin(win);
-	wrefresh(win);
-	int list_pos = 0;
-	char buf[128]; //TODO use a constant
-	for(int i = 0; i < MENU_CLASS_LIST_SIZE; i++) {
-		y++;
-		if(i == list_pos) {
-			DEBUG_LOG("Class name: %s", class_get_name(MENU_CLASS_LIST[i]));
-			snprintf(buf, 128, ">>%s", class_get_name(MENU_CLASS_LIST[i]));
-			wmove(win, y, x);
-			waddstr(win, buf);
-		} else {
-			snprintf(buf, 128, "%s", class_get_name(MENU_CLASS_LIST[i]));
-			wmove(win, y, x);
-			waddstr(win, buf);
-		}
-		memset(buf, 0, 128*sizeof(char));
-	}
-
-
-	while((ch = wgetch(win)) != ESC_KEY) {
-		if(ch == ENTER_KEY) {
-			player_change_class(player, world, MENU_CLASS_LIST[list_pos]);
-			menu_manager->current_menu = GAME;
-			break;
-		} else if(ch == KEY_S) {
-			list_pos++;
-		} else if(ch == KEY_W) {
-			list_pos--;
-		} else if(ch == CTRL_Q ) {
-			shutdown(world, player);
-		}
-
-		DEBUG_LOG("before list pos: %d", list_pos);
-
-		if(list_pos >= MENU_CLASS_LIST_SIZE) list_pos = 0;
-		if(list_pos < 0) list_pos = MENU_CLASS_LIST_SIZE-1;
-
-		DEBUG_LOG("after list pos: %d, %d", list_pos, MENU_CLASS_LIST_SIZE);
-
-		werase(win);
-		waddstr(win, MENU_CLASS_PROMPT);
-		y = 1;
-		wmove(win, y, x);
-		waddstr(win, MENU_DIVIDE_LINE);
-		for(int i = 0; i < MENU_CLASS_LIST_SIZE; i++) {
-			y++;
-			if(i == list_pos) {
-				snprintf(buf, 128, ">>%s", class_get_name(MENU_CLASS_LIST[i]));
-				wmove(win, y, x);
-				waddstr(win, buf);
-			} else {
-				snprintf(buf, 128, "%s", class_get_name(MENU_CLASS_LIST[i]));
-				wmove(win, y, x);
-				waddstr(win, buf);
-			}
-			memset(buf, 0, 128*sizeof(char));
-		}
-
-		wnoutrefresh(win);
-		doupdate();
-	}
-}
-
-void display_spell_equip_menu(player_t *player, popup_menu_t menu) {
-	WINDOW *win = menu.win;
-	werase(win);
-	int y = 1;
-	int x = 1;
-	wmove(win, y++, x);
-	waddstr(win, "Which Spell Slot?");
-	wmove(win, y, x);
-	touchwin(win);
-	wrefresh(win);
-	box(win, 0, 0);
-	char full[66] = ">>";
-	char str[64];
-	if(player->equipment.spell1 >= 0) {
-		snprintf(str, sizeof(str), "1: %s", player->inventory[player->equipment.spell1].name);
-	} else {
-		snprintf(str, sizeof(str), "%s", "1: ");
-	}
-	if(player->spell_equip_menu.cursor_pos == 0) {
-		strcat(full, str);
-		waddstr(win, full);
-	} else {
-		waddstr(win, str);
-	}
-	y++;
-	wmove(win, y, x);
-
-	if(player->equipment.spell2 >= 0) {
-		snprintf(str, sizeof(str), "2: %s", player->inventory[player->equipment.spell2].name);
-	} else {
-		snprintf(str, sizeof(str), "%s", "2: ");
-	}
-	if(player->spell_equip_menu.cursor_pos == 1) {
-		strcat(full, str);
-		waddstr(win, full);
-	} else {
-		waddstr(win, str);
-	}
-	y++;
-	wmove(win, y, x);
-
-	if(player->equipment.spell3 >= 0) {
-		snprintf(str, sizeof(str), "3: %s", player->inventory[player->equipment.spell3].name);
-	} else {
-		snprintf(str, sizeof(str), "%s", "3: ");
-	}
-	if(player->spell_equip_menu.cursor_pos == 2) {
-		strcat(full, str);
-		waddstr(win, full);
-	} else {
-		waddstr(win, str);
-	}
-	y++;
-	wmove(win, y, x);
-	wnoutrefresh(win);
-	doupdate();
-}
+}*/
 
 void display_death_menu(player_t *player, popup_menu_t menu) {
 	WINDOW *win = menu.win;
@@ -1080,6 +638,10 @@ direction_t direction_from_key(int key) {
 			return DOWN;
 	}
 	return -1;
+}
+
+void handle_world_turn(world_t *world, player_t *player) {
+
 }
 
 void end_game(world_t *world, player_t *player) {
@@ -1136,8 +698,6 @@ void return_to_main_menu(world_t *world, player_t *player) {
 // }
 
 void shutdown(world_t *world, player_t *player) {
-	delwin(world->win);
-	endwin();
 	for(int y = 0; y < WORLD_HEIGHT; y++) {
 		for(int x = 0; x < WORLD_WIDTH; x++) {
 			room_t *room = world->room[x][y];
@@ -1173,6 +733,10 @@ void shutdown(world_t *world, player_t *player) {
 
 	free(player->inventory);
 
+	SDL_DestroyRenderer(world->ctx.renderer);
+	SDL_DestroyWindow(world->ctx.window);
+	SDL_DestroyTexture(world->ctx.texture);
+	SDL_Quit();
 	free(player);
 	free(world);
 	exit(0);

@@ -15,14 +15,6 @@ typedef struct {
 	void *data;
 } popup_menu_t;
 
-//TODO I want to redo this
-typedef struct {
-	enum menu_id current_menu;
-	int cursor_pos;
-	enum menu_id dests[MAX_MENUS]; // where each button takes the user
-	int dests_count;
-} menu_manager_t;
-
 typedef struct path_node {
 	int16_t x, y;
 	int16_t g;
@@ -117,7 +109,6 @@ typedef struct player {
 	popup_menu_t death_menu;
 	
 	inventory_manager_t inventory_manager;
-	menu_manager_t menu_manager;
 } player_t;
 
 typedef struct enemy {

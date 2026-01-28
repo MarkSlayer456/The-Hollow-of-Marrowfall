@@ -212,7 +212,7 @@ void render_game(SDL_Context *ctx, world_t *world, player_t *player) {
 	SDL_RenderCopy(ctx->renderer, ctx->texture, &sprites[SPRITE_PLAYER].src, &sprites[SPRITE_PLAYER].dst);
 }
 
-void render_game_hud(SDL_Context *ctx, world_t *world, player_t *player) {
+void render_game_hud(SDL_Context *ctx, world_t *world, player_t *player, int *actor) {
 	room_t *room = world->room[player->global_x][player->global_y];
 	int start_x = 22*20+1;
 	int cur_y = 25;
@@ -313,15 +313,22 @@ void render_game_hud(SDL_Context *ctx, world_t *world, player_t *player) {
 	SDL_Surface *room_surface = TTF_RenderText_Solid(font, buf, white);
 	if(!room_surface) DEBUG_LOG("%s", "surface error");
 	SDL_Texture *room_texture = SDL_CreateTextureFromSurface(ctx->renderer, room_surface);
-
 	room_rect.w = room_surface->w;
 	room_rect.h = room_surface->h;
+
 	cur_y += room_rect.h+1;
 
 	int pos = snprintf(buf, sizeof(buf), "Turn Order: ");
+	if(*actor == PLAYER_TURN_ORDER_INDEX) {
+		pos += snprintf(buf + pos, sizeof(buf)-pos, "[%c] ", 'P');
+	}
 	for(int i = 0; i < world->turn_order_size; i++) {
 		if(world->turn_order[i] == PLAYER_TURN_ORDER_INDEX) {
-			pos += snprintf(buf + pos, sizeof(buf)-pos, "[%c] ", PLAYER);
+			pos += snprintf(buf + pos, sizeof(buf)-pos, "[%c] ", 'P');
+			continue;
+		}
+		if(world->turn_order[i] == WORLD_TURN_ORDER_INDEX) {
+			pos += snprintf(buf + pos, sizeof(buf)-pos, "[%c] ", 'W');
 			continue;
 		}
 		enemy_t *enemy = room->enemies[world->turn_order[i]];
@@ -342,6 +349,7 @@ void render_game_hud(SDL_Context *ctx, world_t *world, player_t *player) {
 
 	turn_rect.w = turn_surface->w;
 	turn_rect.h = turn_surface->h;
+
 	cur_y += turn_rect.h+1;
 
 	int detect_radius = MAX(2, player->lantern.power);

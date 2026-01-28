@@ -1,4 +1,3 @@
-#include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -38,52 +37,9 @@
 	oil is your friend without it you won't last long
 */
 
-static SDL_Window *window = NULL;
-static SDL_Renderer *renderer = NULL;
-
-WINDOW *main_menu_win;
-WINDOW *hud; // gives player useful information
-WINDOW *action_bar; // OLG player's inventory/spells menu, maybe a help menu in the future
-WINDOW *error; // USED FOR ERROR CHECKING ONLY
-WINDOW *inventory_hud; // player's inventory
-WINDOW *inventory_desc_hud; // player's description in the inventory
-
 char walk_chars[WALK_CHAR_LENGTH] = {EMPTY, HOLE, TWISTED_ROOT, STALAGMITE, DOOR, MUD, CHEST}; // characters entites can walk on
 
 int main(int argc, char *argv[]) {
-    WINDOW *win;
-	
-    initscr();
-    curs_set(0);
-
-	win = newwin(20, 20, 0, 0);
-	box(win,0,0);
-    hud = newwin(HUD_HEIGHT, HUD_WIDTH, 0, 21);
-	action_bar = newwin(5, 21, 21, 0);
-	inventory_hud = newwin(INVENTORY_HEIGHT, INVENTORY_WIDTH, 0, 0);
-	inventory_desc_hud = newwin(INVENTORY_HEIGHT, INVENTORY_WIDTH, INVENTORY_HEIGHT, 0);
-    error = newwin(25, 25, 51, 30);
-	main_menu_win = newwin(SCREEN_HEIGHT, SCREEN_WIDTH, 0, 0);
-    
-	load_menu_t load_menu;
-	load_menu.win = newwin(SCREEN_HEIGHT, SCREEN_WIDTH, 0, 0);
-	load_menu.filename_count = 0;
-	load_menu.filename_size = 16;
-	load_menu.cursor_pos = 0;
-	load_menu.cursor_offset = 0;
-	load_menu.filename = calloc(load_menu.filename_size, sizeof(char[SAVE_FILE_MAX_LEN]));
-
-	generate_load_menu_list(&load_menu);
-	
-    refresh();
-    wrefresh(hud);
-    wrefresh(error);
-
-	noecho();
-	nodelay(stdscr, FALSE);
-	keypad(stdscr, FALSE);
-	scrollok(win, FALSE);
-	raw();
 	
 	ensure_save_folder();
 	
@@ -167,6 +123,9 @@ int main(int argc, char *argv[]) {
 
 	world->room[0][0] = first;
 
+	world->action_points = 0;
+	world->turn_has_passed = false;
+
 	world->room[0][0]->door_mask = 0x6;
 	drop_item(world->room[0][0]->tiles[10][1], world->item_data, FIREBALL_SPELL_BOOK, 1);
 	drop_item(world->room[0][0]->tiles[10][1], world->item_data, POISON_SPELL_BOOK, 1);
@@ -186,13 +145,12 @@ int main(int argc, char *argv[]) {
 	calculate_door_masks(world);
 	calculate_main_path(&world->seed, world);
 	
-	SDL_Context ctx = SDL_setup(window, renderer);
-	load_textures(&ctx);
-	world->win = win;
+	world->ctx = SDL_setup();
+	load_textures(&world->ctx);
     world->turn_order_size = 0;
 
-	SDL_RenderClear(ctx.renderer);
-	SDL_RenderPresent(ctx.renderer);
+	SDL_RenderClear(world->ctx.renderer);
+	SDL_RenderPresent(world->ctx.renderer);
 	menu_t menus[MENU_COUNT] = {
 		[MAIN_MENU] = {0},
 		[LOAD_MENU] = {0},
@@ -205,21 +163,25 @@ int main(int argc, char *argv[]) {
 		[SPELL_MENU] = {0},
 	};
 	// menu_t main_menu = {0};
-	main_menu_init(player, &menus[MAIN_MENU], &ctx);
-	class_menu_init(player, &menus[CLASS_MENU], &ctx);
-	load_menu_init(player, &menus[LOAD_MENU], &ctx);
-	inventory_menu_init(player, &menus[INVENTORY_MENU], &ctx, (SDL_Color){255, 255, 255, 255});
-	loot_inventory_menu_init(world, player, &menus[LOOT_MENU], &ctx,(SDL_Color){255, 255, 255, 255});
-	spell_menu_init(player, &menus[SPELL_MENU], &ctx);
+	main_menu_init(player, &menus[MAIN_MENU], &world->ctx);
+	class_menu_init(player, &menus[CLASS_MENU], &world->ctx);
+	load_menu_init(player, &menus[LOAD_MENU], &world->ctx);
+	inventory_menu_init(player, &menus[INVENTORY_MENU], &world->ctx, (SDL_Color){255, 255, 255, 255});
+	loot_inventory_menu_init(world, player, &menus[LOOT_MENU], &world->ctx,(SDL_Color){255, 255, 255, 255});
+	spell_menu_init(player, &menus[SPELL_MENU], &world->ctx);
 	int running = 1;
 	SDL_Event event;
+	int actor = 0;
+
+	const Uint32 FRAME_MS = 16;
 	while(running) {
-
-		SDL_SetRenderDrawColor(ctx.renderer, 0, 0, 0, 255); // black background
-		SDL_RenderClear(ctx.renderer);
-
-		switch(player->menu_manager.current_menu) {
-			case GAME:
+		SDL_SetRenderDrawColor(world->ctx.renderer, 0, 0, 0, 255); // black background
+		SDL_RenderClear(world->ctx.renderer);
+		Uint32 start = SDL_GetTicks();
+		switch(player->state) {
+			case PLAYER_STATE_MOVING:
+			case PLAYER_STATE_ATTACKING:
+			case PLAYER_STATE_VIEWING:
 				if(world->room[0][0]->is_created == false) {
 					//TODO reset world function
 					world->room[0][0] = load_room(&world->seed, 0, 0, world->enemy_data, world->item_data, world);
@@ -227,116 +189,102 @@ int main(int argc, char *argv[]) {
 					calculate_main_path(&world->seed, world);
 					world->turn_order_size = 0;
 					drop_item(world->room[0][0]->tiles[10][1], world->item_data, FIREBALL_SPELL_BOOK, 1);
+					world->turn_has_passed = false;
+					world->action_points = 0;
 				}
-				generate_turn_order_display(world, player);
-				for(int i = 0; i < world->room[player->global_x][player->global_y]->current_enemy_count; i++) {
-					enemy_t *enemy = world->room[player->global_x][player->global_y]->enemies[i];
-					if(enemy != NULL) {
-						enemy_handle_lighting_buff(enemy, world);
+				if(world->turn_has_passed) {
+					for(int i = 0; i < world->room[player->global_x][player->global_y]->current_enemy_count; i++) {
+						enemy_t *enemy = world->room[player->global_x][player->global_y]->enemies[i];
+						if(enemy != NULL) {
+							enemy_handle_lighting_buff(enemy, world);
+						}
 					}
-				}
-				draw(world, player);
-				player_get_nearby_loot(world->room[player->global_x][player->global_y], player);
-				int actor = INVALID_ACTOR_INDEX;
+					player_get_nearby_loot(world->room[player->global_x][player->global_y], player);
+					actor = INVALID_ACTOR_INDEX;
 
-				if(!world->is_player_turn) {
 					actor = pick_next_actor(world, player);
 					assert(actor != INVALID_ACTOR_INDEX);
-				}
 
-				if(world->is_player_turn || actor == PLAYER_TURN_ORDER_INDEX) {
-					lantern_update_dimming(&player->lantern);
-					draw(world, player);
-					// bool run = false;
-					// char c;
-					// while(run == false) {
-						// c = getch();
-						// run = manage_input(c, world, player, &player->menu_manager);
-						// draw(world, player);
-					// }
-					traps_triggered_check_player(world, player);
-					buff_apply(world->buffs, &world->buff_count, world);
-				} else if(actor >= 0) {
-					enemy_t *enemy = world->room[player->global_x][player->global_y]->enemies[actor];
-					if(enemy != NULL) {
-						enemy_handle_lighting_buff(enemy, world);
-						enemy_decide_move(enemy, world, player);
+					if(actor == PLAYER_TURN_ORDER_INDEX) {
+						world->turn_has_passed = false;
+					} else if(actor >= 0) {
+						enemy_t *enemy = world->room[player->global_x][player->global_y]->enemies[actor];
+						if(enemy != NULL) {
+							enemy_handle_lighting_buff(enemy, world);
+							enemy_decide_move(enemy, world, player);
+						}
+					} else if(actor == WORLD_TURN_ORDER_INDEX) {
+						lantern_update_dimming(&player->lantern);
+						traps_triggered_check_player(world, player);
+						buff_apply(world->buffs, &world->buff_count, world);
 					}
+					calculate_light(world, player);
+					traps_triggered_check_enemies(world, world->room[player->global_x][player->global_y]);
 				}
-				traps_triggered_check_enemies(world, world->room[player->global_x][player->global_y]);
-				calculate_light(world, player);
-				render_game(&ctx, world, player);
-				render_game_hud(&ctx, world, player);
+				generate_turn_order_display(world, player);
+				render_game(&world->ctx, world, player);
+				render_game_hud(&world->ctx, world, player, &actor);
 				break;
-			case MAIN_MENU: { // this bracket must be here and it infuriates me
-				menu_render(&menus[MAIN_MENU], ctx.renderer);
-				SDL_RenderPresent(ctx.renderer);
-				draw_main_menu(main_menu_win, &player->menu_manager);
+			case PLAYER_STATE_MAIN_MENU: { // this bracket must be here and it infuriates me
+				world->turn_has_passed = false;
+				menu_update_cursor_pos(&menus[MAIN_MENU]);
+				menu_render(&menus[MAIN_MENU], world->ctx.renderer);
 				// char c = getch();
 				// manage_menu_input(c, &player->menu_manager, world, player);
 				break;
 			}
-			case LOAD_MENU: {
-				menu_render(&menus[LOAD_MENU], ctx.renderer);
-				draw_load_menu(&load_menu);
-				// char c = getch();
-				// manage_load_menu_input(c, &load_menu, world, player, &player->menu_manager);
+			case PLAYER_STATE_LOAD_MENU: {
+				world->turn_has_passed = false;
+				menu_update_cursor_pos(&menus[LOAD_MENU]);
+				menu_render(&menus[LOAD_MENU], world->ctx.renderer);
 				break;
 			}
-			case SAVE_MENU: {
-				char buf[SAVE_FILE_MAX_LEN];
-				display_and_manage_save_menu(main_menu_win, buf, SAVE_FILE_MAX_LEN, world, player, &player->menu_manager);
+			case PLAYER_STATE_SAVE_MENU: {
+				world->turn_has_passed = false;
+				// char buf[SAVE_FILE_MAX_LEN];
+				// display_and_manage_save_menu(main_menu_win, buf, SAVE_FILE_MAX_LEN, world, player, &player->menu_manager);
 				break;
 			}
-			case LOG_BOOK_MENU:
+			case PLAYER_STATE_LOG_BOOK:
+				world->turn_has_passed = false;
 				break;
-			case CLASS_MENU:
-				menu_render(&menus[CLASS_MENU], ctx.renderer);
-				SDL_RenderPresent(ctx.renderer);
-				// display_and_manage_class_menu(main_menu_win, world, player, &player->menu_manager);
+			case PLAYER_STATE_CLASS_MENU:
+				world->turn_has_passed = false;
+				menu_update_cursor_pos(&menus[CLASS_MENU]);
+				menu_render(&menus[CLASS_MENU], world->ctx.renderer);
 				break;
-			case NULL_MENU:
-				player->menu_manager.current_menu = MAIN_MENU;
-				DEBUG_LOG("%s", "WARNING: NULL_MENU WAS SET, RESETTING TO MAIN_MENU");
+			case PLAYER_STATE_INVENTORY:
+			case PLAYER_STATE_LOOTING:
+				world->turn_has_passed = false;
+				SDL_RenderClear(world->ctx.renderer);
+				if(player->state == PLAYER_STATE_INVENTORY) {
+					inventory_update_textures(player, &menus[INVENTORY_MENU], &world->ctx, (SDL_Color){255, 255, 255, 255});
+					loot_inventory_update_textures(player, &menus[LOOT_MENU], &world->ctx, (SDL_Color){128, 128, 128, 255});
+				} else {
+					inventory_update_textures(player, &menus[INVENTORY_MENU], &world->ctx, (SDL_Color){128, 128, 128, 255});
+					loot_inventory_update_textures(player, &menus[LOOT_MENU], &world->ctx, (SDL_Color){255, 255, 255, 255});
+				}
+
+				menu_render(&menus[INVENTORY_MENU], world->ctx.renderer);
+				menu_render(&menus[LOOT_MENU], world->ctx.renderer);
+				break;
+			case PLAYER_STATE_EQUIPPING_SPELL:
+				world->turn_has_passed = false;
+				SDL_RenderClear(world->ctx.renderer);
+				spell_update_textures(player, &menus[SPELL_MENU], &world->ctx);
+
+				menu_update_cursor_pos(&menus[SPELL_MENU]);
+
+				menu_render(&menus[SPELL_MENU], world->ctx.renderer);
 				break;
 			default:
 				break;
 		}
-		if(player->state == PLAYER_STATE_INVENTORY || player->state == PLAYER_STATE_LOOTING) {
-			SDL_RenderClear(ctx.renderer);
-			if(player->state == PLAYER_STATE_INVENTORY) {
-				inventory_update_textures(player, &menus[INVENTORY_MENU], &ctx, (SDL_Color){255, 255, 255, 255});
-				loot_inventory_update_textures(player, &menus[LOOT_MENU], &ctx, (SDL_Color){128, 128, 128, 255});
-			} else {
-				inventory_update_textures(player, &menus[INVENTORY_MENU], &ctx, (SDL_Color){128, 128, 128, 255});
-				loot_inventory_update_textures(player, &menus[LOOT_MENU], &ctx, (SDL_Color){255, 255, 255, 255});
-			}
-			menu_update_cursor_pos(&menus[INVENTORY_MENU]);
-			menu_update_cursor_pos(&menus[LOOT_MENU]);
-
-			menu_render(&menus[INVENTORY_MENU], ctx.renderer);
-			menu_render(&menus[LOOT_MENU], ctx.renderer);
-			SDL_RenderPresent(ctx.renderer);
-		}
-		if(player->state == PLAYER_STATE_EQUIPPING_SPELL) {
-			SDL_RenderClear(ctx.renderer);
-			spell_update_textures(player, &menus[SPELL_MENU], &ctx);
-
-			menu_update_cursor_pos(&menus[SPELL_MENU]);
-
-			menu_render(&menus[SPELL_MENU], ctx.renderer);
-			SDL_RenderPresent(ctx.renderer);
-		}
 
 		while(SDL_PollEvent(&event)) {
-			if(player->state == PLAYER_STATE_INVENTORY) {
-				// menu_handle_input(player, menus, INVENTORY_MENU, event);
-				// inventory_update_textures(player, &menus[INVENTORY_MENU], &ctx); //TODO this is pretty inefficient
-			} else {
-				menu_handle_input(player, menus, player->menu_manager.current_menu, event);
-				menu_update_cursor_pos(&menus[player->menu_manager.current_menu]);
+			if(!world->turn_has_passed) {
+				world->turn_has_passed = sdl_manage_input(event, world, player, menus);
 			}
-			sdl_manage_input(event, world, player, menus);
 
 			switch(event.type) {
 				case SDL_QUIT:
@@ -345,12 +293,17 @@ int main(int argc, char *argv[]) {
 					break;
 			}
 		}
-		SDL_RenderPresent(ctx.renderer);
-		SDL_Delay(16); // 16 = ~60 FPS
+
+		SDL_RenderPresent(world->ctx.renderer);
+
+		Uint32 elapsed = SDL_GetTicks() - start;
+		if(elapsed < FRAME_MS) {
+			SDL_Delay(FRAME_MS - elapsed);
+		}
+
     }
-    endwin();
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
+    SDL_DestroyRenderer(world->ctx.renderer);
+	SDL_DestroyWindow(world->ctx.window);
 	SDL_Quit();
     exit(0);
     return 0;

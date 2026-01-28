@@ -316,7 +316,7 @@ int handle_weapon_change(player_t *player, int new_weapon) {
     int *main_hand = &player->equipment.main_hand;
     int *off_hand = &player->equipment.off_hand;
     int *attack_weapon = &player->equipment.attack_weapon;
-    if(player->inventory[player->inventory_manager.inv_selector].stat_type.weapon.main_hand == true) {
+    if(player->inventory[new_weapon].stat_type.weapon.main_hand == true) {
         if(*main_hand == new_weapon) {
             if(player->inventory[*main_hand].stat_type.weapon.two_handed == true) {
                 player->inventory[*off_hand].stat_type.weapon.equipped = false;
@@ -328,7 +328,7 @@ int handle_weapon_change(player_t *player, int new_weapon) {
             player->inventory[*main_hand].stat_type.weapon.equipped = false;
             *main_hand = -1;
         } else {
-            if(player->inventory[player->inventory_manager.inv_selector].stat_type.weapon.two_handed == true) {
+            if(player->inventory[new_weapon].stat_type.weapon.two_handed == true) {
                 if(*main_hand >= 0) {
                     for(int i = 0; i < MAX_ARMOR_MODIFIERS; i++) {
                         sub_player_equipment_stats(player, player->inventory[*main_hand].stat_type.weapon.modifier_stats[i].stat, player->inventory[*main_hand].stat_type.weapon.modifier_stats[i].modifier);

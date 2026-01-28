@@ -2,17 +2,4 @@
 #define HUD_H_
 #include "types.h"
 
-void hud_update_player_health(const player_t *player, const buff_t *buff_array, int buff_count);
-void hud_update_nearby_enemies(world_t *world, player_t *player);
-
-void hud_update_messages(world_t *world, player_t *player);
-
-void hud_update_all(world_t *world, player_t *player);
-
-void display_error_message(const char *str);
-
-void display_inventory_hud(world_t *world, player_t *player);
-
-void display_inventory_desc_hud(world_t *world, player_t *player);
-
 #endif

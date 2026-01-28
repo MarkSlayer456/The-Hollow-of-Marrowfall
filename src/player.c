@@ -579,11 +579,13 @@ void player_cycle_loot_selector_down(player_t *player) {
 	}
 }
 
-void player_open_loot(player_t *player, menu_t *menu) {
+void player_open_loot(player_t *player, menu_t *menus) {
 	if(player->nearby_loot_count == 0) return;
 	// player->inventory_manager.loot_selector = 0;
-	menu->selected = 0;
-	menu->offset = 0;
+	menus[LOOT_MENU].selected = 0;
+	menus[LOOT_MENU].offset = 0;
+	menus[LOOT_MENU].needs_redraw = true;
+	menus[INVENTORY_MENU].needs_redraw = true;
 	player->state = PLAYER_STATE_LOOTING;
 }
 
@@ -592,8 +594,11 @@ void player_close_loot(player_t *player) {
 }
 
 
-void player_open_inventory(player_t *player) {
+void player_open_inventory(player_t *player, menu_t *menus) {
+	menus[LOOT_MENU].needs_redraw = true;
+	menus[INVENTORY_MENU].needs_redraw = true;
 	player->state  = PLAYER_STATE_INVENTORY;
+
 }
 
 void player_close_inventory(player_t *player) {
@@ -651,12 +656,12 @@ void player_drop_item(player_t *player, world_t *world, menu_t *menu) {
 	player_get_nearby_loot(world->room[player->global_x][player->global_y], player);
 }
 
-void player_take_loot_item(room_t *room, player_t *player, menu_t *menu) {
-	int item_index = menu->selected+menu->offset;
+void player_take_loot_item(room_t *room, player_t *player, menu_t *menus) {
+	int item_index = menus[LOOT_MENU].selected+menus[LOOT_MENU].offset;
 	item_t *selected_item = player->nearby_loot[item_index];
 	if(!selected_item) {
-		menu->selected = 0;
-		menu->offset = 0;
+		menus[LOOT_MENU].selected = 0;
+		menus[LOOT_MENU].offset = 0;
 	}
 	player_add_to_inv(player, *selected_item);
 	int start_y = player->y - 1;
@@ -677,7 +682,7 @@ void player_take_loot_item(room_t *room, player_t *player, menu_t *menu) {
 				if(item == selected_item) {
 					remove_item_from_tile(room->tiles[y][x], item);
 					if(item_index == player->nearby_loot_count-1) {
-						menu_cursor_up(menu);
+						menu_cursor_up(&menus[LOOT_MENU]);
 					}
 					break;
 				}
@@ -688,7 +693,9 @@ void player_take_loot_item(room_t *room, player_t *player, menu_t *menu) {
 	}
 	// need to repopulate the array
 	player_get_nearby_loot(room, player);
-	if(player->nearby_loot_count == 0) player_open_inventory(player);
+	menus[LOOT_MENU].needs_redraw = true;
+	menus[INVENTORY_MENU].needs_redraw = true;
+	if(player->nearby_loot_count == 0) player_open_inventory(player, menus);
 }
 
 void player_get_nearby_loot(room_t *room, player_t *player) {
@@ -874,7 +881,7 @@ void player_setup(player_t *player, world_t *world) {
 	player->equipment.spell2 = -1;
 	player->equipment.spell3 = -1;
 
-	player->state = PLAYER_STATE_MOVING;
+	player->state = PLAYER_STATE_MAIN_MENU;
 
 	player->inventory = malloc(INV_SIZE * sizeof(item_t));
 	player->inventory_count = 0;
@@ -892,7 +899,6 @@ void player_setup(player_t *player, world_t *world) {
 	player->lantern.power = 5;
 	player->lantern.is_on = true;
 	player->lantern.turns_since_last_dim = 0;
-	player->menu_manager = (menu_manager_t){.current_menu = MAIN_MENU, .cursor_pos = 0};
 }
 
 void player_reset_values(player_t *player, world_t *world) {
@@ -942,7 +948,7 @@ void player_reset_values(player_t *player, world_t *world) {
 	player->equipment.spell1 = -1;
 	player->equipment.spell2 = -1;
 	player->equipment.spell3 = -1;
-	player->state = PLAYER_STATE_MOVING;
+	player->state = PLAYER_STATE_MAIN_MENU;
 
 	player->inventory_count = 0;
 	player->nearby_loot_count = 0;
@@ -961,7 +967,7 @@ void player_reset_values(player_t *player, world_t *world) {
 	player->lantern.is_on = true;
 	player->lantern.turns_since_last_dim = 0;
 
-	player->menu_manager.current_menu = MAIN_MENU;
+	player->state = PLAYER_STATE_MAIN_MENU;
 	// menu manager doesn't need to be cleared, it's always in use
 
 }
