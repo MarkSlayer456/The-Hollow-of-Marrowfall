@@ -1,6 +1,5 @@
 #ifndef GAME_MANAGER_H_
 #define GAME_MANAGER_H_
-#include <ncurses.h>
 #include <stdbool.h>
 #include "enums.h"
 #include "types.h"

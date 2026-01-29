@@ -6,7 +6,6 @@
 #include "enemy.h"
 #include <math.h>
 #include <assert.h>
-#include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>

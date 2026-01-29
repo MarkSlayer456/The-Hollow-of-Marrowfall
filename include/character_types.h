@@ -2,7 +2,6 @@
 
 #define CHARACTER_TYPES_H_
 
-#include <ncurses.h>
 #include "items/item_types.h"
 
 typedef struct {

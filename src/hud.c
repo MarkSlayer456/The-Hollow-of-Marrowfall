@@ -1,4 +1,3 @@
-#include <ncurses.h>
 #include "hud.h"
 #include "game_manager.h"
 #include "map_manager.h"
