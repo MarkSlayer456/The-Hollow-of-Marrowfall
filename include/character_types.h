@@ -105,8 +105,6 @@ typedef struct player {
 	equipment_t equipment;
 	int oil;
 	player_state_t state;
-	popup_menu_t spell_equip_menu;
-	popup_menu_t death_menu;
 	
 	inventory_manager_t inventory_manager;
 } player_t;

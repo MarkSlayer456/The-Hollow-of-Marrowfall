@@ -518,16 +518,16 @@ void enemy_handle_lighting_buff(enemy_t *enemy, world_t *world) {
     const tile_t *tile = world->room[enemy->global_x][enemy->global_y]->tiles[enemy->y][enemy->x];
     if(tile->has_light && enemy->trait == LIGHT_CENTERED) {
         enemy_set_constitution(enemy, enemy_get_base_constitution(enemy, world->enemy_data)+ENEMY_LIGHT_CONSTITUTION_BUFF);
-        enemy_set_strength(enemy, enemy_get_base_constitution(enemy, world->enemy_data)+ENEMY_LIGHT_STRENGTH_BUFF);
-        enemy_set_speed(enemy, enemy_get_base_constitution(enemy, world->enemy_data)+ENEMY_LIGHT_SPEED_BUFF);
+        enemy_set_strength(enemy, enemy_get_base_strength(enemy, world->enemy_data)+ENEMY_LIGHT_STRENGTH_BUFF);
+        enemy_set_speed(enemy, enemy_get_base_speed(enemy, world->enemy_data)+ENEMY_LIGHT_SPEED_BUFF);
     } else if(!tile->has_light && enemy->trait == DARK_CENTERED) {
         enemy_set_constitution(enemy, enemy_get_base_constitution(enemy, world->enemy_data)+ENEMY_DARK_CONSTITUTION_BUFF);
-        enemy_set_strength(enemy, enemy_get_base_constitution(enemy, world->enemy_data)+ENEMY_DARK_STRENGTH_BUFF);
-        enemy_set_speed(enemy, enemy_get_base_constitution(enemy, world->enemy_data)+ENEMY_DARK_SPEED_BUFF);
+        enemy_set_strength(enemy, enemy_get_base_strength(enemy, world->enemy_data)+ENEMY_DARK_STRENGTH_BUFF);
+        enemy_set_speed(enemy, enemy_get_base_speed(enemy, world->enemy_data)+ENEMY_DARK_SPEED_BUFF);
     } else {
         enemy_set_constitution(enemy, enemy_get_base_constitution(enemy, world->enemy_data));
         enemy_set_strength(enemy, enemy_get_base_constitution(enemy, world->enemy_data));
-        enemy_set_speed(enemy, enemy_get_base_constitution(enemy, world->enemy_data));
+        enemy_set_speed(enemy, enemy_get_base_speed(enemy, world->enemy_data));
     }
 }
 

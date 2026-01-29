@@ -13,7 +13,7 @@
 #include "items/items.h"
 
 void main_menu_init(player_t *player, menu_t *menu, SDL_Context *ctx) {
-	static menu_data_item_t main_menu_items[] = {
+	static ui_data_t main_menu_items[] = {
 		{ .sdl_data = { NULL, { .x = 50, .y = 50, .w = 250, .h = 50} }, .data_type.const_data = { .str = GAME_TITLE, .font_size = 18}},
 		{ .sdl_data = { NULL, { .x = 50, .y = 100, .w = 250, .h = 50} }, .data_type.const_data = { .str = MENU_DIVIDE_LINE, .font_size = 18}},
 		{ .sdl_data = { NULL, { .x = 50, .y = 150, .w = 250, .h = 50} }, .data_type.const_data = { .str = "New Game", .font_size = 18}},
@@ -61,13 +61,13 @@ void main_menu_init(player_t *player, menu_t *menu, SDL_Context *ctx) {
 }
 
 void class_menu_init(player_t *player, menu_t *menu, SDL_Context *ctx) {
-	static menu_data_item_t class_menu_items[CLASS_COUNT+1];
+	static ui_data_t class_menu_items[CLASS_COUNT+1];
 	static player_state_t dests[CLASS_COUNT];
 	for(int i = 0; i < CLASS_COUNT; i++) {
-		class_menu_items[i] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 50, .y = 25*(i+1), .w = 250, .h = 50} }, .data_type.const_data = { .str = class_get_name(i), .font_size = 18}};
+		class_menu_items[i] = (ui_data_t){ .sdl_data = { NULL, { .x = 50, .y = 25*(i+1), .w = 250, .h = 50} }, .data_type.const_data = { .str = class_get_name(i), .font_size = 18}};
 		dests[i] = PLAYER_STATE_MOVING;
 	}
-	class_menu_items[CLASS_COUNT] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 0, .y = 0, .w = 0, .h = 0} }, .data_type.const_data = { .str = "--> ", .font_size = 18}};
+	class_menu_items[CLASS_COUNT] = (ui_data_t){ .sdl_data = { NULL, { .x = 0, .y = 0, .w = 0, .h = 0} }, .data_type.const_data = { .str = "--> ", .font_size = 18}};
 
 
 	menu->menu_item_size = CLASS_COUNT+1;
@@ -131,15 +131,15 @@ void load_menu_init(player_t *player, menu_t *menu, SDL_Context *ctx) {
 		filenames_count++;
 	}
 
-	menu_data_item_t *load_menu_items = calloc(filenames_count+1, sizeof(menu_data_item_t));
+	ui_data_t *load_menu_items = calloc(filenames_count+1, sizeof(ui_data_t));
 	player_state_t *dests = calloc(filenames_count, sizeof(player_state_t));
 	for(int i = 0; i < filenames_count; i++) {
-		load_menu_items[i] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 50, .y = 25*(i+1), .w = 250, .h = 50} }, .data_type.dynamic_data = { .font_size = 18}};
+		load_menu_items[i] = (ui_data_t){ .sdl_data = { NULL, { .x = 50, .y = 25*(i+1), .w = 250, .h = 50} }, .data_type.dynamic_data = { .font_size = 18}};
 		strcpy(load_menu_items[i].data_type.dynamic_data.str, filenames[i]);
 		dests[i] = PLAYER_STATE_MOVING;
 	}
 
-	load_menu_items[filenames_count] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 0, .y = 0, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
+	load_menu_items[filenames_count] = (ui_data_t){ .sdl_data = { NULL, { .x = 0, .y = 0, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
 
 	strcpy(load_menu_items[filenames_count].data_type.dynamic_data.str, "-->");
 	menu->menu_item_size = filenames_count+1;
@@ -184,27 +184,27 @@ void load_menu_init(player_t *player, menu_t *menu, SDL_Context *ctx) {
 void inventory_menu_init(player_t *player, menu_t *menu, SDL_Context *ctx, SDL_Color color) {
 	const int size = 10+13;
 	const int lines_for_desc = 10;
-	menu_data_item_t *inventory_menu_items = calloc(size, sizeof(menu_data_item_t));
+	ui_data_t *inventory_menu_items = calloc(size, sizeof(ui_data_t));
 	player_state_t *dests = calloc(size, sizeof(player_state_t));
 
-	inventory_menu_items[0] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 50, .y = 25, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
+	inventory_menu_items[0] = (ui_data_t){ .sdl_data = { NULL, { .x = 50, .y = 25, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
 	strcpy(inventory_menu_items[0].data_type.dynamic_data.str, "Inventory");
-	inventory_menu_items[1] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 50, .y = 50, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
+	inventory_menu_items[1] = (ui_data_t){ .sdl_data = { NULL, { .x = 50, .y = 50, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
 	strcpy(inventory_menu_items[1].data_type.dynamic_data.str, MENU_DIVIDE_LINE);
 
 	for(int i = 2; i < lines_for_desc+2; i++) {
-		inventory_menu_items[i] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 50, .y = 25*(i+12), .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 14}};
+		inventory_menu_items[i] = (ui_data_t){ .sdl_data = { NULL, { .x = 50, .y = 25*(i+12), .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 14}};
 	}
 
 	int inv_index = 0;
 	for(int i = 12; i < size-1; i++) {
-		inventory_menu_items[i] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 50, .y = 25*((i-10)+1), .w = 250, .h = 50} }, .data_type.dynamic_data = { .font_size = 14}};
+		inventory_menu_items[i] = (ui_data_t){ .sdl_data = { NULL, { .x = 50, .y = 25*((i-10)+1), .w = 250, .h = 50} }, .data_type.dynamic_data = { .font_size = 14}};
 		strcpy(inventory_menu_items[i].data_type.dynamic_data.str, player->inventory[inv_index].name);
 		dests[i] = PLAYER_STATE_MOVING; //TODO.. this probably won't be used anyway
 		inv_index++;
 	}
 
-	inventory_menu_items[size-1] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 0, .y = 0, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 14}};
+	inventory_menu_items[size-1] = (ui_data_t){ .sdl_data = { NULL, { .x = 0, .y = 0, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 14}};
 	strcpy(inventory_menu_items[size-1].data_type.dynamic_data.str, "-->");
 
 	menu->menu_item_size = size;
@@ -323,25 +323,25 @@ void inventory_update_textures(player_t *player, menu_t *menu, SDL_Context *ctx,
 void loot_inventory_menu_init(world_t *world, player_t *player, menu_t *menu, SDL_Context *ctx, SDL_Color color) {
 	const int size = 10+13;
 	const int lines_for_desc = 10;
-	menu_data_item_t *loot_inventory_menu_items = calloc(size, sizeof(menu_data_item_t));
+	ui_data_t *loot_inventory_menu_items = calloc(size, sizeof(ui_data_t));
 	player_state_t *dests = calloc(size, sizeof(player_state_t));
 
-	loot_inventory_menu_items[0] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 462, .y = 25, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
+	loot_inventory_menu_items[0] = (ui_data_t){ .sdl_data = { NULL, { .x = 462, .y = 25, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
 	strcpy(loot_inventory_menu_items[0].data_type.dynamic_data.str, "Loot Menu");
-	loot_inventory_menu_items[1] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 462, .y = 50, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
+	loot_inventory_menu_items[1] = (ui_data_t){ .sdl_data = { NULL, { .x = 462, .y = 50, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
 	strcpy(loot_inventory_menu_items[1].data_type.dynamic_data.str, MENU_DIVIDE_LINE);
 
 	for(int i = 2; i < lines_for_desc+2; i++) {
-		loot_inventory_menu_items[i] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 462, .y = 25*(i+12), .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 14}};
+		loot_inventory_menu_items[i] = (ui_data_t){ .sdl_data = { NULL, { .x = 462, .y = 25*(i+12), .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 14}};
 	}
 	int loot_index = 0;
 	for(int i = 12; i < size-1; i++) {
-		loot_inventory_menu_items[i] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 462, .y = 25*((i-10)+1), .w = 250, .h = 50} }, .data_type.dynamic_data = { .font_size = 14}};
+		loot_inventory_menu_items[i] = (ui_data_t){ .sdl_data = { NULL, { .x = 462, .y = 25*((i-10)+1), .w = 250, .h = 50} }, .data_type.dynamic_data = { .font_size = 14}};
 		dests[i] = PLAYER_STATE_MOVING; //TODO.. this probably won't be used anyway
 		loot_index++;
 	}
 
-	loot_inventory_menu_items[size-1] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 0, .y = 0, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 14}};
+	loot_inventory_menu_items[size-1] = (ui_data_t){ .sdl_data = { NULL, { .x = 0, .y = 0, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 14}};
 	strcpy(loot_inventory_menu_items[size-1].data_type.dynamic_data.str, "-->");
 
 	menu->menu_item_size = size;
@@ -462,21 +462,21 @@ void loot_inventory_update_textures(player_t *player, menu_t *menu, SDL_Context 
 
 void spell_menu_init(player_t *player, menu_t *menu, SDL_Context *ctx) {
 	const int size = 6;
-	menu_data_item_t *spell_menu_items = calloc(size, sizeof(menu_data_item_t));
+	ui_data_t *spell_menu_items = calloc(size, sizeof(ui_data_t));
 	player_state_t *dests = calloc(size, sizeof(player_state_t));
 
-	spell_menu_items[0] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 50, .y = 25, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
+	spell_menu_items[0] = (ui_data_t){ .sdl_data = { NULL, { .x = 50, .y = 25, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
 	strcpy(spell_menu_items[0].data_type.dynamic_data.str, "Which Spell Slot?");
-	spell_menu_items[1] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 50, .y = 50, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
+	spell_menu_items[1] = (ui_data_t){ .sdl_data = { NULL, { .x = 50, .y = 50, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 18}};
 	strcpy(spell_menu_items[1].data_type.dynamic_data.str, MENU_DIVIDE_LINE);
 
 	for(int i = 2; i < size-1; i++) {
-		spell_menu_items[i] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 50, .y = 25*i+1, .w = 250, .h = 50} }, .data_type.dynamic_data = { .font_size = 14}};
+		spell_menu_items[i] = (ui_data_t){ .sdl_data = { NULL, { .x = 50, .y = 25*i+1, .w = 250, .h = 50} }, .data_type.dynamic_data = { .font_size = 14}};
 		strcpy(spell_menu_items[i].data_type.dynamic_data.str, " ");
 		dests[i] = PLAYER_STATE_MOVING; //TODO.. this probably won't be used anyway
 	}
 
-	spell_menu_items[size-1] = (menu_data_item_t){ .sdl_data = { NULL, { .x = 0, .y = 0, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 14}};
+	spell_menu_items[size-1] = (ui_data_t){ .sdl_data = { NULL, { .x = 0, .y = 0, .w = 0, .h = 0} }, .data_type.dynamic_data = { .font_size = 14}};
 	strcpy(spell_menu_items[size-1].data_type.dynamic_data.str, "-->");
 
 	menu->menu_item_size = size;
@@ -557,6 +557,197 @@ void spell_update_textures(player_t *player, menu_t *menu, SDL_Context *ctx) {
 	}
 }
 
+void hud_init(player_t *player, hud_t *hud, SDL_Context *ctx) {
+	const int size = 7+MAX_ENEMIES_PER_LEVEL;
+	int start_x = 22*20+1;
+	ui_data_t *hud_data = calloc(size, sizeof(ui_data_t));
+
+	for(int i = 0; i < size-1; i++) {
+		hud_data[i] = (ui_data_t){
+			.sdl_data = { NULL, { .x = start_x, .y = 0, .w = 0, .h = 0} },
+			.data_type.dynamic_data = { .font_size = 18}};
+	}
+
+	hud->data = hud_data;
+	hud->data_size = size;
+	hud->needs_redraw = true;
+
+	//TODO delete this
+	// for(int i = 0; i < hud->menu_item_size; i++) {
+	// 	TTF_Font *font = TTF_OpenFont("./data/Instruction.ttf", hud->data[i].data_type.dynamic_data.font_size);
+	// 	if(!font) DEBUG_LOG("open font error: %s", TTF_GetError());
+ //
+	// 	if(strlen(hud->data[i].data_type.dynamic_data.str) == 0 ||
+	// 		strcmp(hud->data[i].data_type.dynamic_data.str, BLANK_NAME) == 0) continue;
+	// 	SDL_Surface *surface = TTF_RenderText_Solid(font, hud->data[i].data_type.dynamic_data.str, color);
+	// 	if(!surface) DEBUG_LOG("%s %s", "surface error: ", TTF_GetError());
+	// 	hud->data[i].sdl_data.rect.w = surface->w;
+	// 	hud->data[i].sdl_data.rect.h = surface->h;
+	// 	if(i+1 == hud->menu_item_size) {
+	// 		hud->data[i].sdl_data.rect.x = hud->data[hud->selected+hud->select_start_offset].sdl_data.rect.x - hud->data[i].sdl_data.rect.w;
+	// 		hud->data[i].sdl_data.rect.y = hud->data[hud->selected+hud->select_start_offset].sdl_data.rect.y;
+	// 	}
+	// 	hud->data[i].sdl_data.texture = SDL_CreateTextureFromSurface(ctx->renderer, surface);
+	// 	SDL_FreeSurface(surface);
+	// 	TTF_CloseFont(font);
+	// }
+}
+
+void hud_update_textures(world_t *world, player_t *player, hud_t *hud, SDL_Context *ctx) {
+	if(!hud->needs_redraw) return;
+	hud->needs_redraw = false;
+	for(int i = 0; i < hud->data_size; i++) {
+		TTF_Font *font = TTF_OpenFont("./data/Instruction.ttf", hud->data[i].data_type.dynamic_data.font_size);
+		if(!font) DEBUG_LOG("open font error: %s", TTF_GetError());
+		SDL_Color white = {255, 255, 255, 255};
+
+		hud->data[i].sdl_data.rect.y = (25*i);
+		size_t size = sizeof(hud->data[i].data_type.dynamic_data.str);
+		char *str = hud->data[i].data_type.dynamic_data.str;
+		char *cmp = my_strdup(hud->data[i].data_type.dynamic_data.str);
+		room_t *room = world->room[player->global_x][player->global_y];
+		bool changed = false;
+		switch(i) {
+			case 0: {
+				const char *player_class = class_get_name(player->player_class);
+				snprintf(str, size, "Class: %s", player_class);
+				break;
+			}
+			case 1:
+				snprintf(
+					str, size,
+					"Health %d / %d | Mana: %d / %d | Level: %d | XP: %d / %d",
+					player->health, player->max_health,
+					player->mana, player->max_mana,
+					player->level, player->xp,
+					xp_to_level_up(player->level));
+				break;
+			case 2:
+				DEBUG_LOG("speed = %f", player->speed);
+				snprintf(
+					str, size,
+					"Str: %d | Dex: %d | Int: %d | Const: %d | Spd: %d",
+					(int)player->strength, (int)player->dexterity,
+					(int)player->intelligence, (int)player->constitution,
+					(int)player->speed);
+				break;
+			case 3:
+				if(player->equipment.attack_weapon >= 0) {
+					snprintf(
+						str, size,
+						"Attack Weapon: %s | Oil: %d",
+						player->inventory[player->equipment.attack_weapon].name,
+						player->oil);
+				} else {
+					snprintf(
+						str, size,
+						"Attack Weapon: Unarmed | Oil: %d",
+						player->oil);
+				}
+				break;
+			case 4:
+				memset(str, 0, size);
+
+				int max_status_effects = 4;
+				strcat(str, "Status: ");
+				int status_count = 0;
+				for(int j = 0; j < world->buff_count; j++) {
+					if(status_count == max_status_effects) break;
+					if(world->buffs[j].target_type_id == TARGET_PLAYER) {
+						if(status_count != 0) {
+							strcat(str, ", ");
+						}
+						strcat(str, world->buffs[j].name);
+						strcat(str, ":");
+						char turns_left[8];
+						snprintf(
+							turns_left, sizeof(turns_left),
+							"%d", world->buffs[j].turns_left);
+						strcat(str, turns_left);
+						status_count++;
+					}
+				}
+				break;
+			case 5:
+				snprintf(
+					str, size,
+					"Room Location: (%d, %d)",
+					player->global_x, player->global_y);
+				break;
+			case 6: {
+				// if(*actor == PLAYER_TURN_ORDER_INDEX) {
+				// 	pos += snprintf(buf + pos, sizeof(buf)-pos, "[%c] ", 'P');
+				// }
+				int pos = snprintf(str, size, "Turn Order: ");
+				for(int j = 0; j < world->turn_order_size; j++) {
+					if(world->turn_order[j] == PLAYER_TURN_ORDER_INDEX) {
+						pos += snprintf(str + pos, size-pos, "[%c] ", 'P');
+						continue;
+					}
+					if(world->turn_order[j] == WORLD_TURN_ORDER_INDEX) {
+						pos += snprintf(str + pos, size-pos, "[%c] ", 'W');
+						continue;
+					}
+					enemy_t *enemy = room->enemies[world->turn_order[j]];
+					if(enemy != NULL && enemy->type != ENEMY_NONE) {
+						if(room->tiles[enemy->y][enemy->x]->has_light) {
+							pos += snprintf(
+									str + pos, size-pos,
+									"[%c] ", enemy->symbol);
+						} else {
+							pos += snprintf(str + pos, size-pos, "[?] ");
+						}
+					}
+				}
+				break;
+			}
+			default: {
+				int enemy_index = i - 7;
+				if(enemy_index >= room->current_enemy_count) {
+					strcpy(str, " ");
+					break;
+				}
+				int detect_radius = MAX(2, player->lantern.power);
+
+				if(!room->enemies[enemy_index]) {
+					strcpy(str, " ");
+					break;
+				}
+				if(room->enemies[enemy_index]->x > player->x-detect_radius &&
+					room->enemies[enemy_index]->x < player->x+detect_radius &&
+					room->enemies[enemy_index]->y > player->y-(detect_radius) &&
+					room->enemies[enemy_index]->y < player->y+(detect_radius)) {
+
+					snprintf(
+						str, size,
+						"%s : %d",
+						room->enemies[enemy_index]->name,
+						room->enemies[enemy_index]->health);
+					break;
+				} else {
+					strcpy(str, " ");
+					break;
+				}
+			}
+		}
+		if(strcmp(str, cmp) != 0) {
+			changed = true;
+		}
+		free(cmp);
+		if(changed) {
+			SDL_DestroyTexture(hud->data[i].sdl_data.texture);
+			SDL_Surface *surface = TTF_RenderText_Solid(font, hud->data[i].data_type.dynamic_data.str, white);
+			if(!surface) DEBUG_LOG("%s %s, %d, %d", "surface error: ", TTF_GetError(), i, room->current_enemy_count);
+			hud->data[i].sdl_data.rect.w = surface->w;
+			hud->data[i].sdl_data.rect.h = surface->h;
+			hud->data[i].sdl_data.texture = SDL_CreateTextureFromSurface(ctx->renderer, surface);
+			SDL_FreeSurface(surface);
+		}
+		TTF_CloseFont(font);
+	}
+}
+
+
 /*
 void load_game(world_t *world, player_t *player, menu_t *menu) {
 	//TODO
@@ -619,5 +810,11 @@ void menu_update_cursor_pos(menu_t *menu) {
 void menu_render(const menu_t *menu, SDL_Renderer *renderer) {
 	for(int i = 0; i < menu->menu_item_size; i++) {
 		SDL_RenderCopy(renderer, menu->data[i].sdl_data.texture, NULL, &menu->data[i].sdl_data.rect);
+	}
+}
+
+void ui_render(ui_data_t *data, int16_t data_size, SDL_Renderer *renderer) {
+	for(int i = 0; i < data_size; i++) {
+		SDL_RenderCopy(renderer, data[i].sdl_data.texture, NULL, &data[i].sdl_data.rect);
 	}
 }

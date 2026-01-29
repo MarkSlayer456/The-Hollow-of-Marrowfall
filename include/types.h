@@ -99,6 +99,7 @@ typedef struct {
 	SDL_Rect src;
 } sprite_t;
 
+//TODO remove
 typedef struct {
 	const char *str;
 	int font_size;
@@ -107,20 +108,20 @@ typedef struct {
 typedef struct {
 	char str[256];
 	int font_size;
-} dynamic_data_menu_item_t;
+} ui_text_data_t;
 
 typedef struct {
 	SDL_Data sdl_data;
 	union {
-		const_data_menu_item_t const_data;
-		dynamic_data_menu_item_t dynamic_data;
+		const_data_menu_item_t const_data; //TODO remove
+		ui_text_data_t dynamic_data;
 	} data_type;
-} menu_data_item_t;
+} ui_data_t;
 
 typedef struct menu menu_t;
 
 struct menu {
-	menu_data_item_t *data;
+	ui_data_t *data;
 	player_state_t *dests;
 	void (*operation)(void *ctx1, void *ctx2, void *ctx3);
 	void *operation_ctx1;
@@ -135,5 +136,11 @@ struct menu {
 	int offset_max;
 	bool needs_redraw;
 };
+
+typedef struct {
+	ui_data_t *data;
+	int16_t data_size;
+	bool needs_redraw;
+} hud_t;
 
 #endif

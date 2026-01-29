@@ -9,35 +9,91 @@
 #define MAX(a, b) a > b ? a : b
 
 sprite_t sprites[SPRITE_COUNT] = {
-	[SPRITE_BLANK] = {.dst = {0}, .src = { .x = 0, .y = 0, .w = 7, .h = 9 }},
-	[SPRITE_EXCLAMATION] = { .dst = {0}, .src = { .x = 7, .y = 0, .w = 7, .h = 9 }},
-	[SPRITE_PLAYER] = { .dst = {0}, .src = { .x = 35, .y = 45, .w = 7, .h = 9 }},
-	[SPRITE_DOT] = { .dst = {0}, .src = { .x = 98, .y = 0, .w = 7, .h = 9 }},
-	[SPRITE_POT] = { .dst = {0}, .src = { .x = 42, .y = 0, .w = 7, .h = 9 }},
-	[SPRITE_MUD] = { .dst = {0}, .src = { .x = 28, .y = 45, .w = 7, .h = 9 }},
-	[SPRITE_HOLE] = { .dst = {0}, .src = { .x = 112, .y = 0, .w = 7, .h = 9 }},
-	[SPRITE_STALAGMITE] = { .dst = {0}, .src = { .x = 56, .y = 27, .w = 7, .h = 9 }},
-	[SPRITE_TWISTED_ROOT] = { .dst = {0}, .src = { .x = 14, .y = 0, .w = 7, .h = 9 }},
-	[SPRITE_WALL] = { .dst = {0}, .src = { .x = 21, .y = 0, .w = 7, .h = 9 }},
-	[SPRITE_DOOR] = { .dst = {0}, .src = { .x = 105, .y = 0, .w = 7, .h = 9 }},
-	[SPRITE_FLOOR_ITEM] = { .dst = {0}, .src = { .x = 70, .y = 0, .w = 7, .h = 9 }},
-	[SPRITE_BAT] = { .dst = {0}, .src = { .x = 84, .y = 27, .w = 7, .h = 9 }},
-	[SPRITE_RAT] = { .dst = {0}, .src = { .x = 70, .y = 36, .w = 7, .h = 9 }},
-	[SPRITE_SKELETON] = { .dst = {0}, .src = { .x = 105, .y = 18, .w = 7, .h = 9 }},
-	[SPRITE_SLIME] = { .dst = {0}, .src = { .x = 77, .y = 36, .w = 7, .h = 9 }},
-	[SPRITE_MUD_CRAWLER] = { .dst = {0}, .src = { .x = 91, .y = 27, .w = 7, .h = 9 }},
-	[SPRITE_BOG_LURKER] = { .dst = {0}, .src = { .x = 112, .y = 18, .w = 7, .h = 9 }},
-	[SPRITE_MOSS_BEAST] = { .dst = {0}, .src = { .x = 63, .y = 18, .w = 7, .h = 9 }},
-	[SPRITE_DRAGON] = { .dst = {0}, .src = { .x = 0, .y = 18, .w = 7, .h = 9 }},
-	[SPRITE_BABY_DRAGON] = { .dst = {0}, .src = { .x = 84, .y = 27, .w = 7, .h = 9 }},
-	[SPRITE_GOBLIN] = { .dst = {0}, .src = { .x = 21, .y = 18, .w = 7, .h = 9 }},
-	[SPRITE_GHOST] = { .dst = {0}, .src = { .x = 126, .y = 27, .w = 7, .h = 9 }},
-	[SPRITE_LOOT_GOBLIN] = { .dst = {0}, .src = { .x = 84, .y = 36, .w = 7, .h = 9 }},
-	[SPRITE_JESTER] = { .dst = {0}, .src = { .x = 42, .y = 18, .w = 7, .h = 9 }},
-	[SPRITE_VOIDLING] = { .dst = {0}, .src = { .x = 98, .y = 36, .w = 7, .h = 9 }},
-	[SPRITE_MARROW_CRAWLER] = { .dst = {0}, .src = { .x = 119, .y = 9, .w = 7, .h = 9 }},
-	[SPRITE_VOID_MAW] = { .dst = {0}, .src = { .x = 0, .y = 36, .w = 7, .h = 9 }},
-	[SPRITE_MARROW_LEECH] = { .dst = {0}, .src = { .x = 56, .y = 18, .w = 7, .h = 9 }},
+	[SPRITE_BLANK] = {
+		.dst = {0},
+		.src = { .x = 0, .y = 0, .w = 7, .h = 9 }},
+	[SPRITE_EXCLAMATION] = {
+		.dst = {0},
+		.src = { .x = 7, .y = 0, .w = 7, .h = 9 }},
+	[SPRITE_PLAYER] = { .
+		dst = {0},
+		.src = { .x = 35, .y = 45, .w = 7, .h = 9 }},
+	[SPRITE_DOT] = {
+		.dst = {0},
+		.src = { .x = 98, .y = 0, .w = 7, .h = 9 }},
+	[SPRITE_POT] = {
+		.dst = {0},
+		.src = { .x = 42, .y = 0, .w = 7, .h = 9 }},
+	[SPRITE_MUD] = {
+		.dst = {0},
+		.src = { .x = 28, .y = 45, .w = 7, .h = 9 }},
+	[SPRITE_HOLE] = {
+		.dst = {0},
+		.src = { .x = 112, .y = 0, .w = 7, .h = 9 }},
+	[SPRITE_STALAGMITE] = {
+		.dst = {0},
+		.src = { .x = 56, .y = 27, .w = 7, .h = 9 }},
+	[SPRITE_TWISTED_ROOT] = {
+		.dst = {0},
+		.src = { .x = 14, .y = 0, .w = 7, .h = 9 }},
+	[SPRITE_WALL] = {
+		.dst = {0},
+		.src = { .x = 21, .y = 0, .w = 7, .h = 9 }},
+	[SPRITE_DOOR] = {
+		.dst = {0},
+		.src = { .x = 105, .y = 0, .w = 7, .h = 9 }},
+	[SPRITE_FLOOR_ITEM] = {
+		.dst = {0},
+		.src = { .x = 70, .y = 0, .w = 7, .h = 9 }},
+	[SPRITE_BAT] = {
+		.dst = {0},
+		.src = { .x = 84, .y = 27, .w = 7, .h = 9 }},
+	[SPRITE_RAT] = {
+		.dst = {0},
+		.src = { .x = 70, .y = 36, .w = 7, .h = 9 }},
+	[SPRITE_SKELETON] = {
+		.dst = {0},
+		.src = { .x = 105, .y = 18, .w = 7, .h = 9 }},
+	[SPRITE_SLIME] = {
+		.dst = {0},
+		.src = { .x = 77, .y = 36, .w = 7, .h = 9 }},
+	[SPRITE_MUD_CRAWLER] = {
+		.dst = {0},
+		.src = { .x = 91, .y = 27, .w = 7, .h = 9 }},
+	[SPRITE_BOG_LURKER] = {
+		.dst = {0},
+		.src = { .x = 112, .y = 18, .w = 7, .h = 9 }},
+	[SPRITE_MOSS_BEAST] = {
+		.dst = {0},
+		.src = { .x = 63, .y = 18, .w = 7, .h = 9 }},
+	[SPRITE_DRAGON] = {
+		.dst = {0},
+		.src = { .x = 0, .y = 18, .w = 7, .h = 9 }},
+	[SPRITE_BABY_DRAGON] = {
+		.dst = {0},
+		.src = { .x = 84, .y = 27, .w = 7, .h = 9 }},
+	[SPRITE_GOBLIN] = {
+		.dst = {0},
+		.src = { .x = 21, .y = 18, .w = 7, .h = 9 }},
+	[SPRITE_GHOST] = {
+		.dst = {0},
+		.src = { .x = 126, .y = 27, .w = 7, .h = 9 }},
+	[SPRITE_LOOT_GOBLIN] = {
+		.dst = {0},
+		.src = { .x = 84, .y = 36, .w = 7, .h = 9 }},
+	[SPRITE_JESTER] = {
+		.dst = {0}, .src = { .x = 42, .y = 18, .w = 7, .h = 9 }},
+	[SPRITE_VOIDLING] = {
+		.dst = {0}, .src = { .x = 98, .y = 36, .w = 7, .h = 9 }},
+	[SPRITE_MARROW_CRAWLER] = {
+		.dst = {0},
+		.src = { .x = 119, .y = 9, .w = 7, .h = 9 }},
+	[SPRITE_VOID_MAW] = {
+		.dst = {0},
+		.src = { .x = 0, .y = 36, .w = 7, .h = 9 }},
+	[SPRITE_MARROW_LEECH] = {
+		.dst = {0},
+		.src = { .x = 56, .y = 18, .w = 7, .h = 9 }},
 };
 
 const int sdl_sprite_map_len = sizeof(sprites) / sizeof(sprites[0]);
@@ -58,13 +114,22 @@ SDL_Context SDL_setup() {
 		return ctx;
 	}
 
-	ctx.window = SDL_CreateWindow("The Hollow of Marrowfall", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+	ctx.window = SDL_CreateWindow(
+		"The Hollow of Marrowfall",
+		SDL_WINDOWPOS_CENTERED,
+		SDL_WINDOWPOS_CENTERED,
+		WINDOW_WIDTH,
+		WINDOW_HEIGHT,
+		SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	if(ctx.window  == NULL) {
 		DEBUG_LOG("SDL_CreateWindow Error: %s\n", SDL_GetError());
 		return ctx;
 	}
 
-	ctx.renderer = SDL_CreateRenderer(ctx.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	ctx.renderer = SDL_CreateRenderer(
+		ctx.window,
+		-1,
+		SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	if(ctx.renderer == NULL) {
 		DEBUG_LOG("SDL_CreateRenderer Error: %s\n", SDL_GetError());
 		SDL_DestroyWindow(ctx.window);
@@ -153,6 +218,18 @@ void render_game(SDL_Context *ctx, world_t *world, player_t *player) {
 			int enemyIsThere = 0;
 			int playerIsThere = 0;
 			int potIsThere = 0;
+			for(int k = 0; k < MAX_ITEMS_PER_TILE; k++) {
+				if(room->tiles[i][j]->items[k] != NULL && room->tiles[i][j]->items[k]->stack > 0) {
+					sprites[SPRITE_FLOOR_ITEM].dst.x = j*22;
+					sprites[SPRITE_FLOOR_ITEM].dst.y = i*28;
+					sprites[SPRITE_FLOOR_ITEM].dst.w = 21;
+					sprites[SPRITE_FLOOR_ITEM].dst.h = 27;
+					SDL_RenderCopy(ctx->renderer, ctx->texture, &sprites[SPRITE_FLOOR_ITEM].src, &sprites[SPRITE_FLOOR_ITEM].dst);
+					enemyIsThere = 1;
+					break;
+				}
+			}
+
 			for(int u = 0; u < room->current_enemy_count; u++) {
 				if(room->enemies[u] == NULL) continue;
 				if(room->enemies[u]->x == j && room->enemies[u]->y == i) {
@@ -181,18 +258,6 @@ void render_game(SDL_Context *ctx, world_t *world, player_t *player) {
 
 			if(player->x == j && player->y == i) {
 				playerIsThere = 1;
-			}
-
-			for(int k = 0; k < MAX_ITEMS_PER_TILE; k++) {
-				if(room->tiles[i][j]->items[k] != NULL && room->tiles[i][j]->items[k]->stack > 0) {
-					sprites[SPRITE_FLOOR_ITEM].dst.x = j*22;
-					sprites[SPRITE_FLOOR_ITEM].dst.y = i*28;
-					sprites[SPRITE_FLOOR_ITEM].dst.w = 21;
-					sprites[SPRITE_FLOOR_ITEM].dst.h = 27;
-					SDL_RenderCopy(ctx->renderer, ctx->texture, &sprites[SPRITE_FLOOR_ITEM].src, &sprites[SPRITE_FLOOR_ITEM].dst);
-					enemyIsThere = 1;
-					break;
-				}
 			}
 
 			if(!playerIsThere && !enemyIsThere && !potIsThere) {

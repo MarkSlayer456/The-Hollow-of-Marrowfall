@@ -162,6 +162,7 @@ int main(int argc, char *argv[]) {
 		[LOOT_MENU] = {0},
 		[SPELL_MENU] = {0},
 	};
+	hud_t game_hud = {0};
 	// menu_t main_menu = {0};
 	main_menu_init(player, &menus[MAIN_MENU], &world->ctx);
 	class_menu_init(player, &menus[CLASS_MENU], &world->ctx);
@@ -169,6 +170,8 @@ int main(int argc, char *argv[]) {
 	inventory_menu_init(player, &menus[INVENTORY_MENU], &world->ctx, (SDL_Color){255, 255, 255, 255});
 	loot_inventory_menu_init(world, player, &menus[LOOT_MENU], &world->ctx,(SDL_Color){255, 255, 255, 255});
 	spell_menu_init(player, &menus[SPELL_MENU], &world->ctx);
+	hud_init(player, &game_hud, &world->ctx);
+
 	int running = 1;
 	SDL_Event event;
 	int actor = 0;
@@ -200,30 +203,36 @@ int main(int argc, char *argv[]) {
 						}
 					}
 					player_get_nearby_loot(world->room[player->global_x][player->global_y], player);
-					actor = INVALID_ACTOR_INDEX;
-
-					actor = pick_next_actor(world, player);
+					if(actor == INVALID_ACTOR_INDEX) {
+						actor = pick_next_actor(world, player);
+					}
 					assert(actor != INVALID_ACTOR_INDEX);
 
 					if(actor == PLAYER_TURN_ORDER_INDEX) {
 						world->turn_has_passed = false;
+						game_hud.needs_redraw = true;
+						actor = INVALID_ACTOR_INDEX;
 					} else if(actor >= 0) {
 						enemy_t *enemy = world->room[player->global_x][player->global_y]->enemies[actor];
 						if(enemy != NULL) {
 							enemy_handle_lighting_buff(enemy, world);
 							enemy_decide_move(enemy, world, player);
 						}
+						actor = INVALID_ACTOR_INDEX;
 					} else if(actor == WORLD_TURN_ORDER_INDEX) {
 						lantern_update_dimming(&player->lantern);
 						traps_triggered_check_player(world, player);
 						buff_apply(world->buffs, &world->buff_count, world);
+						actor = INVALID_ACTOR_INDEX;
 					}
 					calculate_light(world, player);
 					traps_triggered_check_enemies(world, world->room[player->global_x][player->global_y]);
 				}
 				generate_turn_order_display(world, player);
+				hud_update_textures(world, player, &game_hud, &world->ctx);
 				render_game(&world->ctx, world, player);
-				render_game_hud(&world->ctx, world, player, &actor);
+				// render_game_hud(&world->ctx, world, player, &actor);
+				ui_render(game_hud.data, game_hud.data_size, world->ctx.renderer);
 				break;
 			case PLAYER_STATE_MAIN_MENU: { // this bracket must be here and it infuriates me
 				world->turn_has_passed = false;
@@ -265,6 +274,9 @@ int main(int argc, char *argv[]) {
 					loot_inventory_update_textures(player, &menus[LOOT_MENU], &world->ctx, (SDL_Color){255, 255, 255, 255});
 				}
 
+				menu_update_cursor_pos(&menus[INVENTORY_MENU]);
+				menu_update_cursor_pos(&menus[LOOT_MENU]);
+
 				menu_render(&menus[INVENTORY_MENU], world->ctx.renderer);
 				menu_render(&menus[LOOT_MENU], world->ctx.renderer);
 				break;
@@ -278,6 +290,7 @@ int main(int argc, char *argv[]) {
 				menu_render(&menus[SPELL_MENU], world->ctx.renderer);
 				break;
 			default:
+				world->turn_has_passed = false;
 				break;
 		}
 
@@ -302,9 +315,5 @@ int main(int argc, char *argv[]) {
 		}
 
     }
-    SDL_DestroyRenderer(world->ctx.renderer);
-	SDL_DestroyWindow(world->ctx.window);
-	SDL_Quit();
-    exit(0);
     return 0;
 }

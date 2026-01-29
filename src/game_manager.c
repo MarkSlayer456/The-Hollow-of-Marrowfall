@@ -121,6 +121,7 @@ const int MENU_CLASS_LIST_SIZE = sizeof(MENU_CLASS_LIST) / sizeof(MENU_CLASS_LIS
 
 bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t *menus) {
 	room_t *room = world->room[player->global_x][player->global_y];
+	bool end_turn = true;
 	switch(event.type) {
 		case SDL_KEYDOWN:
 			switch(event.key.keysym.sym) {
@@ -143,9 +144,13 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 							break;
 						case PLAYER_STATE_INVENTORY:
 							menu_cursor_up(&menus[INVENTORY_MENU]);
+							menus[INVENTORY_MENU].needs_redraw = true;
+							end_turn = false;
 							break;
 						case PLAYER_STATE_LOOTING:
 							menu_cursor_up(&menus[LOOT_MENU]);
+							menus[LOOT_MENU].needs_redraw = true;
+							end_turn = false;
 							break;
 						case PLAYER_STATE_MENU:
 							break;
@@ -176,9 +181,13 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 							break;
 						case PLAYER_STATE_INVENTORY:
 							menu_cursor_down(&menus[INVENTORY_MENU]);
+							menus[INVENTORY_MENU].needs_redraw = true;
+							end_turn = false;
 							break;
 						case PLAYER_STATE_LOOTING:
 							menu_cursor_down(&menus[LOOT_MENU]);
+							menus[LOOT_MENU].needs_redraw = true;
+							end_turn = false;
 							break;
 						case PLAYER_STATE_MENU:
 							break;
@@ -204,6 +213,7 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 								break;
 							case PLAYER_STATE_LOOTING:
 								player_open_inventory(player, menus);
+								end_turn = false;
 								break;
 							case PLAYER_STATE_MENU:
 								break;
@@ -221,6 +231,7 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 								break;
 							case PLAYER_STATE_INVENTORY:
 								player_open_loot(player, menus);
+								end_turn = false;
 								break;
 							case PLAYER_STATE_MENU:
 								break;
@@ -232,6 +243,7 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 						switch(player->state) {
 							case PLAYER_STATE_MOVING:
 								player_enter_attack_state(player, world);
+								end_turn = false;
 								break;
 							case PLAYER_STATE_ATTACKING:
 								break;
@@ -243,6 +255,7 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 						switch(player->state) {
 							case PLAYER_STATE_MOVING:
 								player_open_inventory(player, menus);
+								end_turn = false;
 								break;
 							case PLAYER_STATE_INVENTORY:
 								player_close_inventory(player);
@@ -261,6 +274,7 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 						switch(player->state) {
 							case PLAYER_STATE_MOVING:
 								player_cycle_attack_weapon(player);
+								end_turn = false;
 								break;
 							case PLAYER_STATE_VIEWING:
 								break;
@@ -296,9 +310,16 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 							case PLAYER_STATE_LOAD_MENU:
 								menus[LOAD_MENU].operation(menus[LOAD_MENU].operation_ctx1, menus[LOAD_MENU].operation_ctx2, menus[LOAD_MENU].operation_ctx3);
 								break;
-							case PLAYER_STATE_CLASS_MENU:
-								menus[CLASS_MENU].operation(menus[CLASS_MENU].operation_ctx1, menus[CLASS_MENU].operation_ctx2, menus[CLASS_MENU].operation_ctx3);
+							case PLAYER_STATE_CLASS_MENU: {
+								menu_t class_menu = menus[CLASS_MENU];
+								int data_index = class_menu.selected;
+								player_change_class(
+									player,
+									world,
+									class_get_type(class_menu.data[data_index].data_type.const_data.str));
+								player->state = PLAYER_STATE_MOVING;
 								break;
+							}
 							default:
 								break;
 						}
@@ -351,13 +372,16 @@ bool sdl_manage_input(SDL_Event event, world_t *world, player_t *player, menu_t 
 						}
 						break;
 				}
-			return true;
+			return end_turn;
 		case SDL_QUIT:
 			// end_game(world, player);
 			// running = 0;
 			break;
+		default:
+			end_turn = false;
+			break;
 		}
-	return false;
+	return end_turn;
 }
 
 void display_combat_message(world_t *world, const char *str) {
@@ -500,7 +524,7 @@ int pick_next_actor(world_t *world, player_t *player) {
 			enemy_t *enemy = world->room[player->global_x][player->global_y]->enemies[idx];
 			enemy->action_points -= TIME_TO_ACT;
 		}
-		if(idx != INVALID_ACTOR_INDEX) break;
+		break;
 	}
 	return idx;
 }
@@ -521,7 +545,7 @@ void generate_turn_order_display(world_t *world, player_t *player) {
 		int idx = INVALID_ACTOR_INDEX;
 		world_projected_ap += WORLD_SPEED;
 		if(world_projected_ap >= TIME_TO_ACT && world_projected_ap > largest) {
-			if(largest < world->action_points) {
+			if(largest < world_projected_ap) {
 				largest = world_projected_ap;
 				idx = WORLD_TURN_ORDER_INDEX;
 			}
@@ -529,20 +553,22 @@ void generate_turn_order_display(world_t *world, player_t *player) {
 
 		player_projected_ap += MAX(player->speed, 1);
 		if(player_projected_ap >= TIME_TO_ACT && player_projected_ap > largest) {
-			if(largest < player->action_points) {
+			if(largest < player_projected_ap) {
 				largest = player_projected_ap;
 				idx = PLAYER_TURN_ORDER_INDEX;
 			}
 		}
-		
+
 		room_t *room = world->room[player->global_x][player->global_y];
 		for(int i = 0; i < room->current_enemy_count; i++) {
 			enemy_t *enemy = room->enemies[i];
 			if(enemy == NULL) continue;
 			projected_enemy_ap[i] += MAX(enemy->speed, 1);
 			if(projected_enemy_ap[i] >= TIME_TO_ACT && projected_enemy_ap[i] > largest) {
-				largest = projected_enemy_ap[i];
-				idx = i;
+				if(largest < projected_enemy_ap[i]) {
+					largest = projected_enemy_ap[i];
+					idx = i;
+				}
 			}
 		}
 		
@@ -600,30 +626,30 @@ void display_and_manage_save_menu(WINDOW *win, char *buf, int max_len, world_t *
 	}
 }*/
 
-void display_death_menu(player_t *player, popup_menu_t menu) {
-	WINDOW *win = menu.win;
-	werase(win);
-	box(win, 0, 0);
-	touchwin(win);
-	wrefresh(win);
-
-	char str[64];
-	int y = 1;
-	char title[9] = "You Died";
-	wmove(win, y++, (DEATH_MENU_WIDTH/2) - strlen(title)/2);
-	waddstr(win, title);
-
-	snprintf(str, sizeof(str), "Class: %s | Level: %d", class_get_name(player->player_class), player->level);
-	wmove(win, y, DEATH_MENU_WIDTH/2 - strlen(str)/2);
-	waddstr(win, str);
-	y+=2;
-	snprintf(str, sizeof(str), ">>Return to Main Menu");
-	wmove(win, y, DEATH_MENU_WIDTH/2 - strlen(str)/2);
-	waddstr(win, str);
-
-	wnoutrefresh(win);
-	doupdate();
-}
+// void display_death_menu(player_t *player, popup_menu_t menu) {
+// 	WINDOW *win = menu.win;
+// 	werase(win);
+// 	box(win, 0, 0);
+// 	touchwin(win);
+// 	wrefresh(win);
+//
+// 	char str[64];
+// 	int y = 1;
+// 	char title[9] = "You Died";
+// 	wmove(win, y++, (DEATH_MENU_WIDTH/2) - strlen(title)/2);
+// 	waddstr(win, title);
+//
+// 	snprintf(str, sizeof(str), "Class: %s | Level: %d", class_get_name(player->player_class), player->level);
+// 	wmove(win, y, DEATH_MENU_WIDTH/2 - strlen(str)/2);
+// 	waddstr(win, str);
+// 	y+=2;
+// 	snprintf(str, sizeof(str), ">>Return to Main Menu");
+// 	wmove(win, y, DEATH_MENU_WIDTH/2 - strlen(str)/2);
+// 	waddstr(win, str);
+//
+// 	wnoutrefresh(win);
+// 	doupdate();
+// }
 
 
 direction_t direction_from_key(int key) {
@@ -689,6 +715,7 @@ void return_to_main_menu(world_t *world, player_t *player) {
 	}
 	memset(world->turn_order, 0, sizeof(int)*world->turn_order_size);
 	memset(world->buffs, 0, sizeof(int)*world->buff_size);
+	world->room_template_count = 0;
 
 	player_reset_values(player, world);
 }

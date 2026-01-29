@@ -846,22 +846,6 @@ void player_setup(player_t *player, world_t *world) {
 	player->y = 10;
 	player_change_class(player, world, SAMURAI);
 
-	player->spell_equip_menu.win = newwin(SPELL_EQUIP_MENU_HEIGHT, SPELL_EQUIP_MENU_WIDTH, SCREEN_HEIGHT/2-(SPELL_EQUIP_MENU_HEIGHT/2), SCREEN_WIDTH/2-(SPELL_EQUIP_MENU_WIDTH/2));
-	player->spell_equip_menu.cursor_pos = 0;
-	player->spell_equip_menu.cursor_offset = 0;
-	player->spell_equip_menu.max_cursor_pos = MAX_SPELL_SLOTS;
-	player->spell_equip_menu.data_capacity = 0;
-	player->spell_equip_menu.data_count = 0;
-	player->spell_equip_menu.data = NULL;
-
-	player->death_menu.win = newwin(DEATH_MENU_HEIGHT, DEATH_MENU_WIDTH, SCREEN_HEIGHT/2-(DEATH_MENU_HEIGHT/2), SCREEN_WIDTH/2-(DEATH_MENU_WIDTH/2));
-	player->death_menu.cursor_pos = 0;
-	player->death_menu.cursor_offset = 0;
-	player->death_menu.max_cursor_pos = 1;
-	player->death_menu.data_capacity = 0;
-	player->death_menu.data_count = 0;
-	player->death_menu.data = NULL;
-
 	player->health = player->constitution * 10;
 	player->max_health = player->constitution * 10;
 	player->mana = player->intelligence * 10;
@@ -915,20 +899,6 @@ void player_reset_values(player_t *player, world_t *world) {
 	player->x = 1;
 	player->y = 10;
 	player_change_class(player, world, SAMURAI);
-
-	player->spell_equip_menu.cursor_pos = 0;
-	player->spell_equip_menu.cursor_offset = 0;
-	player->spell_equip_menu.max_cursor_pos = MAX_SPELL_SLOTS;
-	player->spell_equip_menu.data_capacity = 0;
-	player->spell_equip_menu.data_count = 0;
-	player->spell_equip_menu.data = NULL;
-
-	player->death_menu.cursor_pos = 0;
-	player->death_menu.cursor_offset = 0;
-	player->death_menu.max_cursor_pos = 1;
-	player->death_menu.data_capacity = 0;
-	player->death_menu.data_count = 0;
-	player->death_menu.data = NULL;
 
 	player->health = player->constitution * 10;
 	player->max_health = player->constitution * 10;

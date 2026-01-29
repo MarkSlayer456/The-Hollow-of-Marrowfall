@@ -14,9 +14,7 @@ target_include_directories(ck PUBLIC include/)
 file(COPY ${data} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
 
 
-find_package(Curses REQUIRED)
-target_include_directories(ck PUBLIC ${Curses_INCLUDE_DIR})
-target_link_libraries(ck PUBLIC m ncurses ${Curses_LIBRARIES} ubsan)
+target_link_libraries(ck PUBLIC m ubsan)
 
 # SDL2
 find_package(SDL2 REQUIRED)
